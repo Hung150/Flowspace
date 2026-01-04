@@ -21,3 +21,15 @@ A full-stack project management application built with React, Node.js, and Postg
 - ✅ Responsive design
 
 ## 📁 Project Structure
+
+## 🚀 Live Demo
+
+### Full-Stack Application
+- **Frontend (React)**: https://flowspace-app.onrender.com
+- **Backend API**: https://flowspace-api.onrender.com
+- **API Documentation**: https://flowspace-api.onrender.com/api/docs
+
+### Tech Stack
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js, Express, Prisma, PostgreSQL
+- **Deployment**: Render (Full-stack)
