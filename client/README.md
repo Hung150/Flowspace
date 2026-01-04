@@ -20,7 +20,6 @@ A full-stack project management application built with React, Node.js, and Postg
 - ✅ File attachments
 - ✅ Responsive design
 
-## 📁 Project Structure
 
 ## 🚀 Live Demo
 
