@@ -42,3 +42,8 @@ Flowspace/
 - [ ] Step 5: Connect Frontend to Backend
 - [ ] Step 6: Advanced Features (Kanban, Real-time)
 - [ ] Step 7: Testing, Deployment & Documentation
+
+## 🚀 Live Demo
+- **Backend API**: https://flowspace-api.onrender.com
+- **API Documentation**: https://flowspace-api.onrender.com/api/docs
+- **Health Check**: https://flowspace-api.onrender.com/api/health
