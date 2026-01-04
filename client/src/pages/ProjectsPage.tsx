@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProjects } from '../hooks/useProjects'
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 const ProjectsPage = () => {
   const { projects, isLoading, createProject, deleteProject, isCreating } = useProjects()

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authService } from '../services/auth.service'
-import type { User, AuthResponse } from '../types'
+import { User } from '../types' 
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null)
@@ -11,7 +11,7 @@ export const useAuth = () => {
   useEffect(() => {
     const initAuth = async () => {
       const currentUser = authService.getCurrentUser()
-      await new Promise(resolve => setTimeout(resolve, 0)) // Async trick
+      await new Promise(resolve => setTimeout(resolve, 0))
       setUser(currentUser)
       setLoading(false)
     }
@@ -20,10 +20,10 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authService.login(email, password)
-      authService.setAuthData(response.data.user, response.data.token)
-      setUser(response.data.user)
-      return { success: true, data: response }
+      const authResponse = await authService.login(email, password)
+      authService.setAuthData(authResponse.data.user, authResponse.data.token)
+      setUser(authResponse.data.user)
+      return { success: true, data: authResponse }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } }
       return {
@@ -35,10 +35,10 @@ export const useAuth = () => {
 
   const register = async (email: string, password: string, name?: string) => {
     try {
-      const response = await authService.register(email, password, name)
-      authService.setAuthData(response.data.user, response.data.token)
-      setUser(response.data.user)
-      return { success: true, data: response }
+      const authResponse = await authService.register(email, password, name)
+      authService.setAuthData(authResponse.data.user, authResponse.data.token)
+      setUser(authResponse.data.user)
+      return { success: true, data: authResponse }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } }
       return {

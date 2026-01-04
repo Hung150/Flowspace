@@ -35,7 +35,13 @@ export const authService = {
 
   getCurrentUser: (): User | null => {
     const userStr = localStorage.getItem('user')
-    return userStr ? JSON.parse(userStr) : null
+    if (!userStr) return null
+    
+    try {
+      return JSON.parse(userStr)
+    } catch {
+      return null
+    }
   },
 
   setAuthData: (user: User, token: string) => {
