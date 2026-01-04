@@ -1,49 +1,34 @@
-# 🚀 [Flowspace] - Smart Project Hub
+# 🚀 Flowspace - Modern Project Management App
 
-A modern, full-stack project management application built to showcase clean code, scalability, and best practices.
+A full-stack project management application built with React, Node.js, and PostgreSQL. Features real-time updates, drag-and-drop kanban board, and user authentication.
 
-## ✨ Features (Planned)
-
-- **User Authentication & Authorization** (JWT)
-- **Project & Task Management** (Full CRUD)
-- **Kanban Board** with drag & drop
-- **Real-time updates** (WebSocket)
-- **File attachments**
-- **Advanced analytics dashboard**
+## ✨ Live Demo
+[![Live Demo](https://img.shields.io/badge/demo-live-green)](https://flowspace-app.onrender.com) <!-- Thêm sau khi deploy -->
+[![GitHub](https://img.shields.io/badge/source-code-blue)](https://github.com/Hung150/Flowspace)
 
 ## 🛠 Tech Stack
+**Frontend:** React, TypeScript, Vite, Tailwind CSS, TanStack Query  
+**Backend:** Node.js, Express, Prisma ORM, JWT Authentication  
+**Database:** PostgreSQL  
+**Tools:** Docker, Git, Render (Deployment)
 
-- **Frontend:** React, TypeScript, Vite, Tailwind CSS
-- **Backend:** Node.js, Express, Prisma ORM
-- **Database:** PostgreSQL
-- **Authentication:** JWT
-- **Containerization:** Docker & Docker Compose
+## 🚀 Features
+- ✅ User authentication & authorization
+- ✅ Full CRUD for projects & tasks
+- ✅ Drag-and-drop Kanban board
+- ✅ Real-time updates with WebSocket
+- ✅ File attachments
+- ✅ Responsive design
 
-## 📁 Project Structure
-# Flowspace
-A modern project management and task tracking application for teams.
-Flowspace/
-├── client/ # React frontend
-├── server/ # Express backend
-└── README.md
-
-## 🚀 Getting Started
-
-*Instructions will be updated as the project progresses.*
-
----
-
-## 📌 Roadmap
-
-- [ ] Step 1: Project Planning & Repository Setup
-- [ ] Step 2: Backend Foundation (Express, Prisma, Database)
-- [ ] Step 3: Core API (Authentication, Projects, Tasks)
-- [ ] Step 4: Frontend Foundation (React, Vite, Routing)
-- [ ] Step 5: Connect Frontend to Backend
-- [ ] Step 6: Advanced Features (Kanban, Real-time)
-- [ ] Step 7: Testing, Deployment & Documentation
 
 ## 🚀 Live Demo
+
+### Full-Stack Application
+- **Frontend (React)**: https://flowspace-app.onrender.com
 - **Backend API**: https://flowspace-api.onrender.com
 - **API Documentation**: https://flowspace-api.onrender.com/api/docs
-- **Health Check**: https://flowspace-api.onrender.com/api/health
+
+### Tech Stack
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js, Express, Prisma, PostgreSQL
+- **Deployment**: Render (Full-stack)
