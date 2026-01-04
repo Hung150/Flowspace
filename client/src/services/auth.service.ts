@@ -3,7 +3,7 @@ import type { AuthResponse, User } from '../types'
 
 export const authService = {
   register: async (email: string, password: string, name?: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/register', {
+    const response = await api.post<AuthResponse>('/api/auth/register', { // THÊM '/api/'
       email,
       password,
       name,
@@ -12,7 +12,7 @@ export const authService = {
   },
 
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/login', {
+    const response = await api.post<AuthResponse>('/api/auth/login', { // THÊM '/api/'
       email,
       password,
     })
@@ -20,7 +20,7 @@ export const authService = {
   },
 
   getProfile: async (): Promise<User> => {
-    const response = await api.get<{ status: string; data: { user: User } }>('/auth/profile')
+    const response = await api.get<{ status: string; data: { user: User } }>('/api/auth/profile') // THÊM '/api/'
     return response.data.data.user
   },
 
