@@ -11,11 +11,34 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ==================== CORS CONFIGURATION ====================
+// Allow both development and production frontends
+const allowedOrigins = [
+  'http://localhost:5173',                     // Vite dev server
+  'https://flowspace-app.onrender.com'         // Production frontend
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      const msg = `The CORS policy for this site does not allow access from ${origin}`;
+      return callback(new Error(msg), false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
+
+// ==================== MIDDLEWARE ====================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -52,7 +75,11 @@ app.get('/', (req: Request, res: Response) => {
       }
     },
     github: 'https://github.com/Hung150/Flowspace',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    cors: {
+      allowedOrigins: allowedOrigins,
+      message: 'CORS is configured for frontend access'
+    }
   });
 });
 
@@ -62,7 +89,8 @@ app.get('/api/health', (req: Request, res: Response) => {
     status: 'ok',
     message: '✅ FlowSpace API is running',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    cors: allowedOrigins
   });
 });
 
@@ -196,6 +224,17 @@ app.get('/api/docs', (req: Request, res: Response) => {
       .test-button:hover {
         background: #4338ca;
       }
+      .cors-info {
+        background: #dbeafe;
+        border-left: 4px solid #3b82f6;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+      .cors-info h3 {
+        color: #1e40af;
+        margin-bottom: 10px;
+      }
     </style>
   </head>
   <body>
@@ -210,17 +249,28 @@ app.get('/api/docs', (req: Request, res: Response) => {
           <span class="badge">PostgreSQL</span>
           <span class="badge">Prisma</span>
           <span class="badge">JWT Auth</span>
+          <span class="badge">CORS Enabled</span>
         </div>
         
         <div class="test-buttons">
-          <a href="http://localhost:5000/api/health" class="test-button" target="_blank">
+          <a href="/api/health" class="test-button" target="_blank">
             Test Health Endpoint
           </a>
-          <a href="http://localhost:5000/" class="test-button" target="_blank">
+          <a href="/" class="test-button" target="_blank">
             View API Root
           </a>
         </div>
       </header>
+      
+      <div class="cors-info">
+        <h3>🌐 CORS Configuration</h3>
+        <p><strong>Allowed Origins:</strong></p>
+        <ul>
+          <li>Development: <code>http://localhost:5173</code></li>
+          <li>Production: <code>https://flowspace-app.onrender.com</code></li>
+        </ul>
+        <p><strong>Status:</strong> ✅ CORS is properly configured for frontend access</p>
+      </div>
       
       <section>
         <h2>🔐 Authentication Endpoints</h2>
@@ -297,7 +347,7 @@ app.get('/api/docs', (req: Request, res: Response) => {
           ⭐ View on GitHub
         </a>
         <p style="margin-top: 20px;">
-          <small>API Version 2.0.0 • Server: localhost:5000</small>
+          <small>API Version 2.0.0 • Server: ${process.env.RENDER_EXTERNAL_URL || 'localhost:5000'} • CORS: Enabled</small>
         </p>
       </footer>
     </div>
