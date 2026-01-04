@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 // ==================== ROUTES ====================
 
 // 1. Root route - Welcome page
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     message: '🚀 Welcome to FlowSpace API',
@@ -57,7 +57,7 @@ app.get('/', (req, res) => {
 });
 
 // 2. Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
   res.json({ 
     status: 'ok',
     message: '✅ FlowSpace API is running',
@@ -72,7 +72,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 
 // 4. API Documentation (HTML page)
-app.get('/api/docs', (req, res) => {
+app.get('/api/docs', (req: Request, res: Response) => {
   const html = `<!DOCTYPE html>
   <html>
   <head>
@@ -310,7 +310,7 @@ app.get('/api/docs', (req, res) => {
 // ==================== ERROR HANDLING ====================
 
 // 404 handler
-app.all('*', (req, res) => {
+app.all('*', (req: Request, res: Response) => {
   res.status(404).json({ 
     status: 'error',
     message: '❌ Route ' + req.originalUrl + ' not found',
