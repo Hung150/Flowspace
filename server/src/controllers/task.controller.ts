@@ -91,9 +91,9 @@ export const getProjectTasks = async (req: Request, res: Response) => {
 
     // Group tasks by status for Kanban board
     const tasksByStatus = {
-      TODO: tasks.filter(task => task.status === 'TODO'),
-      DOING: tasks.filter(task => task.status === 'DOING'),
-      DONE: tasks.filter(task => task.status === 'DONE')
+      TODO: tasks.filter((task: any) => task.status === 'TODO'),  
+      DOING: tasks.filter((task: any) => task.status === 'DOING'),   
+      DONE: tasks.filter((task: any) => task.status === 'DONE')    
     };
 
     res.status(200).json({
