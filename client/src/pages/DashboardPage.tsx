@@ -14,8 +14,8 @@ const DashboardPage = () => {
 
   const stats = [
     { name: 'Total Projects', value: projects.length, icon: ChartBarIcon, color: 'bg-blue-500' },
-    { name: 'Active Tasks', value: '24', icon: ClockIcon, color: 'bg-green-500' },
-    { name: 'Completed', value: '156', icon: CheckCircleIcon, color: 'bg-purple-500' },
+    { name: 'Active Tasks', value: '0', icon: ClockIcon, color: 'bg-green-500' },
+    { name: 'Completed', value: '0', icon: CheckCircleIcon, color: 'bg-purple-500' },
   ]
 
   const recentProjects = projects.slice(0, 3)
