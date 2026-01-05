@@ -9,7 +9,8 @@ const RegisterPage = lazy(() => import('../pages/RegisterPage'))
 const DashboardPage = lazy(() => import('../pages/DashboardPage'))
 const ProjectsPage = lazy(() => import('../pages/ProjectsPage'))
 const ProjectDetailPage = lazy(() => import('../pages/ProjectDetailPage'))
-
+const TeamPage = lazy(() => import('../pages/TeamPage'))
+const SettingsPage = lazy(() => import('../pages/SettingsPage'))
 const AppRoutes = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
@@ -24,6 +25,8 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:id" element={<ProjectDetailPage />} />
+          <Route path="team" element={<TeamPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
         
         {/* 404 route */}
