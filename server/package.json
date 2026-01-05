@@ -4,7 +4,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && npx prisma generatec",
+    "build": "tsc && npx prisma generate",
     "start": "npx prisma migrate deploy && node dist/server.js"
   },
   "dependencies": {
