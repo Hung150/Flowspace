@@ -4,6 +4,8 @@ import type { Task } from '../types'
 
 export const useTasks = (projectId?: string) => {
   const queryClient = useQueryClient()
+  queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+  queryClient.invalidateQueries({ queryKey: ['tasks'] });
 
   const tasksQuery = useQuery({
     queryKey: ['tasks', projectId],
