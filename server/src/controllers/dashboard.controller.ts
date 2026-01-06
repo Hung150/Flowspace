@@ -1,6 +1,15 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
+
+// Định nghĩa type cho Prisma groupBy result
+type TaskStat = {
+  status: string;
+  _count: {
+    _all: number;
+  };
+};
 
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
@@ -14,8 +23,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
     const userId = req.user.userId;
 
-    console.log('🔍 DEBUG - User ID:', userId);
-
     // 2. Đếm tổng số projects của user (user là owner)
     const totalProjects = await prisma.project.count({
       where: { 
@@ -23,9 +30,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       }
     });
 
-    console.log('🔍 DEBUG - Total Projects:', totalProjects);
-
-    // 3. Đếm tasks theo trạng thái - FIX QUERY
+    // 3. Đếm tasks theo trạng thái - SỬA TYPE
     const tasksStats = await prisma.task.groupBy({
       by: ['status'],
       where: {
@@ -33,52 +38,29 @@ export const getDashboardStats = async (req: Request, res: Response) => {
           ownerId: userId
         }
       },
-      _count: {
-        _all: true
-      }
+      _count: true  // Prisma trả về { _count: { _all: number } }
     });
 
-    console.log('📊 DEBUG - Tasks Stats RAW:', JSON.stringify(tasksStats, null, 2));
+    // DEBUG LOG
+    console.log('📊 Tasks Stats:', tasksStats);
 
-    // 4. DEBUG: Kiểm tra direct query
-    const directTaskCount = await prisma.task.count({
-      where: {
-        project: {
-          ownerId: userId
-        }
-      }
-    });
-
-    console.log('🔍 DEBUG - Direct Task Count:', directTaskCount);
-
-    // 5. Kiểm tra project của user
-    const userProjects = await prisma.project.findMany({
-      where: { ownerId: userId },
-      select: { id: true, name: true, _count: { select: { tasks: true } } }
-    });
-
-    console.log('🔍 DEBUG - User Projects:', JSON.stringify(userProjects, null, 2));
-
-    // 6. Tính Active Tasks - FIX LOGIC
-    // Task có status: 'TODO', 'IN_PROGRESS', 'REVIEW' là active
+    // 4. Tính Active Tasks - SỬA ĐỂ DÙNG ĐÚNG TYPE
     const activeTasks = tasksStats
-      .filter((stat: { status: string; _count: number }) => {
+      .filter((stat: TaskStat) => {
         const status = stat.status?.toUpperCase() || '';
-        return status !== 'DONE' && status !== 'COMPLETED' && status !== 'CANCELLED';
+        return status !== 'DONE' && status !== 'COMPLETED';
       })
-      .reduce((sum: number, stat: { _count: number }) => sum + stat._count, 0);
+      .reduce((sum: number, stat: TaskStat) => sum + stat._count._all, 0);
 
-    // 7. Tính Completed Tasks
+    // 5. Tính Completed Tasks
     const completedTasks = tasksStats
-      .filter((stat: { status: string; _count: number }) => {
+      .filter((stat: TaskStat) => {
         const status = stat.status?.toUpperCase() || '';
         return status === 'DONE' || status === 'COMPLETED';
       })
-      .reduce((sum: number, stat: { _count: number }) => sum + stat._count, 0);
+      .reduce((sum: number, stat: TaskStat) => sum + stat._count._all, 0);
 
-    console.log('✅ DEBUG - Calculated:', { activeTasks, completedTasks });
-
-    // 8. Trả kết quả
+    // 6. Trả kết quả
     res.json({
       status: 'success',
       data: {
@@ -86,22 +68,18 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         activeTasks,
         completedTasks,
         totalTasks: activeTasks + completedTasks,
-        debug: { // Thêm debug info
-          directTaskCount,
-          projects: userProjects.length,
-          tasksStats
-        },
-        byStatus: tasksStats.reduce((obj: Record<string, number>, stat: { status: string; _count: number }) => {
-          obj[stat.status] = stat._count;
+        
+        // Chuyển đổi sang format đơn giản
+        byStatus: tasksStats.reduce((obj: Record<string, number>, stat: TaskStat) => {
+          obj[stat.status] = stat._count._all;
           return obj;
         }, {} as Record<string, number>)
       }
     });
 
   } catch (error) {
-    console.error('❌ Dashboard stats error:', error);
+    console.error('Dashboard stats error:', error);
     
-    // 9. Xử lý lỗi
     const errorMessage = error instanceof Error 
       ? error.message 
       : 'Unknown error occurred';
@@ -109,8 +87,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch dashboard statistics',
-      error: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
-      debug: process.env.NODE_ENV === 'development' ? { stack: error instanceof Error ? error.stack : 'No stack' } : undefined
+      error: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     });
   }
 };
