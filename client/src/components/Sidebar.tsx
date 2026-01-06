@@ -6,8 +6,10 @@ import {
   UserGroupIcon,
   CogIcon,
 } from '@heroicons/react/24/outline'
+import { useDashboardStats } from '../hooks/useDashboardStats'
 
 const Sidebar = () => {
+  const { data: stats } = useDashboardStats()
   const navItems = [
     { to: '/dashboard', icon: HomeIcon, label: 'Dashboard' },
     { to: '/projects', icon: FolderIcon, label: 'Projects' },
@@ -46,15 +48,21 @@ const Sidebar = () => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Active Projects</span>
-              <span className="font-semibold">5</span>
+              <span className="font-semibold">
+                {stats?.data?.totalProjects || 0}
+              </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Tasks Today</span>
-              <span className="font-semibold">12</span>
+              <span className="text-gray-600">Active Tasks</span>
+              <span className="font-semibold">
+                {stats?.data?.activeTasks || 0}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Completed</span>
-              <span className="font-semibold">24</span>
+              <span className="font-semibold">
+                {stats?.data?.completedTasks || 0}
+              </span>
             </div>
           </div>
         </div>
