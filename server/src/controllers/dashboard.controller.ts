@@ -3,17 +3,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Định nghĩa type cho Prisma groupBy result
-type TaskStat = {
-  status: string;
-  _count: {
-    _all: number;
-  };
-};
-
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    // 1. Kiểm tra user đã đăng nhập
     if (!req.user?.userId) {
       return res.status(401).json({ 
         status: 'error',
@@ -23,57 +14,38 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
     const userId = req.user.userId;
 
-    // 2. Đếm tổng số projects của user (user là owner)
+    // 1. Đếm projects
     const totalProjects = await prisma.project.count({
-      where: { 
-        ownerId: userId
+      where: { ownerId: userId }
+    });
+
+    // 2. Đếm tasks - DÙNG CÁCH ĐƠN GIẢN NHẤT
+    // Đếm tất cả tasks của user
+    const allTasks = await prisma.task.count({
+      where: {
+        project: { ownerId: userId }
       }
     });
 
-    // 3. Đếm tasks theo trạng thái - SỬA TYPE
-    const tasksStats = await prisma.task.groupBy({
-      by: ['status'],
+    // Đếm completed tasks (status = 'DONE')
+    const completedTasks = await prisma.task.count({
       where: {
-        project: {
-          ownerId: userId
-        }
-      },
-      _count: true  // Prisma trả về { _count: { _all: number } }
+        project: { ownerId: userId },
+        status: 'DONE'
+      }
     });
 
-    // DEBUG LOG
-    console.log('📊 Tasks Stats:', tasksStats);
+    // Active tasks = tất cả - completed
+    const activeTasks = allTasks - completedTasks;
 
-    // 4. Tính Active Tasks - SỬA ĐỂ DÙNG ĐÚNG TYPE
-    const activeTasks = tasksStats
-      .filter((stat: TaskStat) => {
-        const status = stat.status?.toUpperCase() || '';
-        return status !== 'DONE' && status !== 'COMPLETED';
-      })
-      .reduce((sum: number, stat: TaskStat) => sum + stat._count._all, 0);
-
-    // 5. Tính Completed Tasks
-    const completedTasks = tasksStats
-      .filter((stat: TaskStat) => {
-        const status = stat.status?.toUpperCase() || '';
-        return status === 'DONE' || status === 'COMPLETED';
-      })
-      .reduce((sum: number, stat: TaskStat) => sum + stat._count._all, 0);
-
-    // 6. Trả kết quả
+    // 3. Trả kết quả ĐƠN GIẢN
     res.json({
       status: 'success',
       data: {
         totalProjects,
         activeTasks,
         completedTasks,
-        totalTasks: activeTasks + completedTasks,
-        
-        // Chuyển đổi sang format đơn giản
-        byStatus: tasksStats.reduce((obj: Record<string, number>, stat: TaskStat) => {
-          obj[stat.status] = stat._count._all;
-          return obj;
-        }, {} as Record<string, number>)
+        totalTasks: allTasks
       }
     });
 
