@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProjects } from '../hooks/useProjects'
+import { useDashboardStats } from '../hooks/useDashboardStats'
 import { 
   ChartBarIcon, 
   ClockIcon, 
@@ -10,15 +11,68 @@ import {
 
 const DashboardPage = () => {
   const { user } = useAuth()
-  const { projects, isLoading } = useProjects()
+  const { projects, isLoading: projectsLoading } = useProjects()
+  const { data: stats, isLoading: statsLoading } = useDashboardStats()
 
-  const stats = [
-    { name: 'Total Projects', value: projects.length, icon: ChartBarIcon, color: 'bg-blue-500' },
-    { name: 'Active Tasks', value: '0', icon: ClockIcon, color: 'bg-green-500' },
-    { name: 'Completed', value: '0', icon: CheckCircleIcon, color: 'bg-purple-500' },
+  // THÊM DEBUG LOG
+  console.log('📊 Dashboard Debug:', {
+    stats: stats?.data,
+    loading: { projectsLoading, statsLoading }
+  })
+
+  const isLoading = projectsLoading || statsLoading
+
+  // SỬA: Dùng data từ API, không hardcoded
+  const statCards = [
+    { 
+      name: 'Total Projects', 
+      value: stats?.data?.totalProjects || 0,  // ← Lấy từ API
+      icon: ChartBarIcon, 
+      color: 'bg-blue-500' 
+    },
+    { 
+      name: 'Active Tasks', 
+      value: stats?.data?.activeTasks || 0,    // ← Lấy từ API
+      icon: ClockIcon, 
+      color: 'bg-green-500' 
+    },
+    { 
+      name: 'Completed', 
+      value: stats?.data?.completedTasks || 0, // ← Lấy từ API
+      icon: CheckCircleIcon, 
+      color: 'bg-purple-500' 
+    },
   ]
 
   const recentProjects = projects.slice(0, 3)
+
+  // Hiển thị loading
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white">
+          <h1 className="text-3xl font-bold mb-2">Loading dashboard...</h1>
+          <p className="text-blue-100">Please wait while we fetch your data</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-6 shadow-sm border animate-pulse">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+                <div className="bg-gray-200 p-3 rounded-lg">
+                  <div className="h-6 w-6"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -30,9 +84,9 @@ const DashboardPage = () => {
         <p className="text-blue-100">Here's what's happening with your projects today.</p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - ĐÃ DÙNG DỮ LIỆU API */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <div key={stat.name} className="bg-white rounded-xl p-6 shadow-sm border">
             <div className="flex items-center justify-between">
               <div>
@@ -62,11 +116,7 @@ const DashboardPage = () => {
           </Link>
         </div>
 
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : recentProjects.length > 0 ? (
+        {recentProjects.length > 0 ? (
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recentProjects.map((project) => (
