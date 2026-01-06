@@ -73,6 +73,9 @@ app.get('/', (req: Request, res: Response) => {
         update: 'PUT /api/tasks/:id (protected)',
         status: 'PATCH /api/tasks/:id/status (protected)',
         delete: 'DELETE /api/tasks/:id (protected)'
+      },
+      dashboard: {
+        stats: 'GET /api/dashboard/stats (protected)'
       }
     },
     github: 'https://github.com/Hung150/Flowspace',
@@ -341,6 +344,20 @@ app.get('/api/docs', (req: Request, res: Response) => {
           <span class="protected">PROTECTED</span>
           <p class="description">Update task status (drag & drop support)</p>
         </div>
+        
+        <h2 style="margin-top: 40px;">📊 Dashboard Endpoints</h2>
+        
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <span class="url">/api/dashboard/stats</span>
+          <span class="protected">PROTECTED</span>
+          <p class="description">Get dashboard statistics (total projects, active tasks, completed tasks)</p>
+          <p style="margin-top: 8px; font-size: 0.9rem; color: #4b5563;">
+            <strong>Response:</strong> 
+            <code>{"status":"success","data":{"totalProjects":X,"activeTasks":Y,"completedTasks":Z}}</code>
+          </p>
+        </div>
+        
       </section>
       
       <footer>
