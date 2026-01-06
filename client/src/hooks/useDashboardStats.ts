@@ -63,23 +63,12 @@ export const useDashboardStats = () => {
 
         // Xử lý từng task để phân loại
         tasks.forEach((task: Task) => {
-          // LOG QUAN TRỌNG: Xác định status thực tế
-          // console.log(`Task ${task.id}: status="${task.status}", completed=${task.completed}`);
+            console.log(`Task ${task.id}: status="${task.status}", completed=${task.completed}`);
           
-          // CÁCH 1: Dựa trên trường status (string)
-          // Điều chỉnh điều kiện này dựa trên console log
           const taskStatus = task.status?.toLowerCase() || '';
-          
-          if (taskStatus === 'done' || 
-              taskStatus === 'completed' || 
-              taskStatus === 'closed' ||
-              task.completed === true) {
+           if (taskStatus === 'done' || taskStatus === 'completed') {
             completedTasks++;
-          } else if (taskStatus === 'todo' || 
-                    taskStatus === 'inprogress' || 
-                    taskStatus === 'in-progress' ||
-                    taskStatus === 'pending' ||
-                    taskStatus === 'open') {
+          } else if (taskStatus === 'todo' || taskStatus === 'inprogress') {
             activeTasks++;
           } else {
             // Mặc định coi là active nếu không rõ
