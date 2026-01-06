@@ -41,157 +41,112 @@ export const useDashboardStats = () => {
       try {
         console.log('🔄 [DEBUG] Bắt đầu fetch dashboard stats...');
         
-        // Tạo mảng các endpoint cần thử
-        const endpointsToTry = {
-          projects: ['/api/projects', '/projects', '/api/projects?userId=me'],
-          tasks: ['/api/tasks', '/tasks', '/api/tasks?userId=me']
-        };
+        // Gọi API cơ bản nhất
+        const [projectsRes, tasksRes] = await Promise.all([
+          api.get<Project[]>('/api/projects'),
+          api.get<Task[]>('/api/tasks')
+        ]);
 
-        let projects: Project[] = [];
-        let tasks: Task[] = [];
+        const projects = projectsRes.data || [];
+        const tasks = tasksRes.data || [];
 
-        // THỬ ENDPOINT CHO PROJECTS
-        for (const endpoint of endpointsToTry.projects) {
-          try {
-            console.log(`📡 [DEBUG] Thử endpoint projects: ${endpoint}`);
-            const response = await api.get<Project[]>(endpoint);
-            if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-              console.log(`✅ [DEBUG] Tìm thấy ${response.data.length} projects tại ${endpoint}`);
-              projects = response.data;
-              break;
-            }
-          } catch (error) {
-            // SỬA LỖI: Type check cho error
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.log(`❌ [DEBUG] Endpoint ${endpoint} failed:`, errorMessage);
-          }
-        }
-
-        // THỬ ENDPOINT CHO TASKS
-        for (const endpoint of endpointsToTry.tasks) {
-          try {
-            console.log(`📡 [DEBUG] Thử endpoint tasks: ${endpoint}`);
-            const response = await api.get<Task[]>(endpoint);
-            if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-              console.log(`✅ [DEBUG] Tìm thấy ${response.data.length} tasks tại ${endpoint}`);
-              tasks = response.data;
-              break;
-            }
-          } catch (error) {
-            // SỬA LỖI: Type check cho error
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.log(`❌ [DEBUG] Endpoint ${endpoint} failed:`, errorMessage);
-          }
-        }
-
-        // Nếu không tìm thấy dữ liệu, thử gọi trực tiếp
-        if (projects.length === 0 || tasks.length === 0) {
-          console.log('⚠️ [DEBUG] Không tìm thấy dữ liệu qua api service, thử gọi trực tiếp...');
-          
-          const token = localStorage.getItem('token');
-          const API_URL = import.meta.env.VITE_API_URL || 'https://flowspace-api.onrender.com';
-          
-          try {
-            const [projectsRes, tasksRes] = await Promise.all([
-              fetch(`${API_URL}/api/projects`, {
-                headers: {
-                  'Authorization': token ? `Bearer ${token}` : '',
-                  'Content-Type': 'application/json'
-                }
-              }),
-              fetch(`${API_URL}/api/tasks`, {
-                headers: {
-                  'Authorization': token ? `Bearer ${token}` : '',
-                  'Content-Type': 'application/json'
-                }
-              })
-            ]);
-
-            if (projectsRes.ok) {
-              const projectsData = await projectsRes.json();
-              projects = Array.isArray(projectsData) ? projectsData : [];
-              console.log(`🔗 [DEBUG] Fetch trực tiếp projects:`, projects);
-            }
-
-            if (tasksRes.ok) {
-              const tasksData = await tasksRes.json();
-              tasks = Array.isArray(tasksData) ? tasksData : [];
-              console.log(`🔗 [DEBUG] Fetch trực tiếp tasks:`, tasks);
-            }
-          } catch (directError) {
-            const errorMessage = directError instanceof Error ? directError.message : String(directError);
-            console.error('❌ [DEBUG] Lỗi fetch trực tiếp:', errorMessage);
-          }
-        }
-
-        // DEBUG CHI TIẾT
-        console.log('📊 [DEBUG] DỮ LIỆU CUỐI CÙNG:');
-        console.log('- Projects:', projects);
-        console.log('- Số lượng projects:', projects.length);
-        console.log('- Tasks:', tasks);
-        console.log('- Số lượng tasks:', tasks.length);
-
-        // PHÂN TÍCH STATUS
+        // DEBUG: Xem cấu trúc dữ liệu
+        console.log('📊 [DEBUG] Dữ liệu nhận được:');
+        console.log('- Projects count:', projects.length);
+        console.log('- Tasks count:', tasks.length);
+        
         if (tasks.length > 0) {
-          const allStatuses = tasks.map(t => t.status);
-          const uniqueStatuses = [...new Set(allStatuses)];
-          console.log('🎯 [DEBUG] Tất cả status của tasks:', uniqueStatuses);
-          
-          // In ra chi tiết từng task
-          tasks.forEach((task, index) => {
-            console.log(`${index + 1}. Task: "${task.title || 'Không có tiêu đề'}"`);
-            console.log(`   ID: ${task.id}`);
-            console.log(`   Status: "${task.status}"`);
-            console.log(`   Completed: ${task.completed}`);
-            console.log(`   ProjectId: ${task.projectId}`);
+          console.log('- Task mẫu đầu tiên:', {
+            id: tasks[0].id,
+            title: tasks[0].title,
+            status: tasks[0].status,
+            completed: tasks[0].completed
           });
         }
 
-        // TÍNH TOÁN
+        // TÍNH TOÁN STATS VỚI LOGIC CHÍNH XÁC
         const totalProjects = projects.length;
         
         let activeTasks = 0;
         let completedTasks = 0;
 
-        // LOGIC MẶC ĐỊNH: Tất cả task đều active
-        activeTasks = tasks.length;
+        console.log('🎯 [DEBUG] Phân loại tasks theo Kanban board:');
         
-        // NẾU CÓ DỮ LIỆU THỰC TẾ, SỬA LOGIC Ở ĐÂY
         if (tasks.length > 0) {
-          activeTasks = 0;
-          completedTasks = 0;
+          // PHÂN TÍCH: Tất cả status duy nhất để xác định logic
+          const allStatuses = tasks.map(t => t.status);
+          const uniqueStatuses = [...new Set(allStatuses)];
+          console.log('📝 Tất cả status có trong hệ thống:', uniqueStatuses);
           
-          tasks.forEach((task: Task) => {
+          // LOGIC PHÂN LOẠI THÔNG MINH
+          tasks.forEach((task: Task, index: number) => {
             const taskStatus = task.status?.toLowerCase() || '';
+            const taskTitle = task.title || `Task ${index + 1}`;
             
-            // DỰA TRÊN DỮ LIỆU THỰC TẾ TỪ CONSOLE LOG
-            if (taskStatus.includes('done') || 
-                taskStatus.includes('complete') ||
-                task.completed === true) {
+            // DEBUG chi tiết từng task
+            console.log(`${index + 1}. "${taskTitle}" - Status: "${task.status}" (lower: "${taskStatus}")`);
+            
+            // QUY TẮC PHÂN LOẠI DỰA TRÊN KANBAN BOARD:
+            // TODO, DOING → ACTIVE | DONE → COMPLETED
+            
+            // 1. Kiểm tra nếu có trường completed
+            if (task.completed === true) {
               completedTasks++;
+              console.log(`   ✓ COMPLETED (theo field completed)`);
+              return;
+            }
+            
+            // 2. Logic cho status DONE (cột DONE trong Kanban)
+            const doneKeywords = ['done', 'completed', 'finished', 'closed'];
+            const isDone = doneKeywords.some(keyword => 
+              taskStatus.includes(keyword) || 
+              task.status?.toUpperCase() === 'DONE'
+            );
+            
+            if (isDone) {
+              completedTasks++;
+              console.log(`   ✓ COMPLETED (status có từ khóa "done")`);
+              return;
+            }
+            
+            // 3. Logic cho status ACTIVE (cột TODO, DOING trong Kanban)
+            const activeKeywords = ['todo', 'doing', 'inprogress', 'in_progress', 'pending', 'open'];
+            const isActive = activeKeywords.some(keyword => 
+              taskStatus.includes(keyword) ||
+              task.status?.toUpperCase() === 'TODO' ||
+              task.status?.toUpperCase() === 'DOING'
+            );
+            
+            if (isActive) {
+              activeTasks++;
+              console.log(`   ✓ ACTIVE (status có từ khóa "todo"/"doing")`);
+              return;
+            }
+            
+            // 4. Mặc định: Phân tích theo giá trị status thực tế
+            if (task.status === 'DONE' || task.status === 'done') {
+              completedTasks++;
+              console.log(`   ✓ COMPLETED (status là "DONE")`);
             } else {
               activeTasks++;
+              console.log(`   ✓ ACTIVE (mặc định cho status: "${task.status}")`);
             }
           });
         }
 
-        console.log('📈 [DEBUG] KẾT QUẢ TÍNH TOÁN:', {
+        console.log('📈 [DEBUG] Kết quả tính toán:', {
           totalProjects,
           activeTasks,
-          completedTasks
+          completedTasks,
+          totalTasks: tasks.length,
+          check: `Tổng tasks = ${activeTasks + completedTasks} (phải bằng ${tasks.length})`
         });
 
-        // Nếu vẫn là 0, đặt giá trị mặc định
-        if (totalProjects === 0 && activeTasks === 0) {
-          console.log('⚠️ [DEBUG] Sử dụng giá trị mặc định từ screenshot');
-          return {
-            data: {
-              totalProjects: 2,  // Từ screenshot: có 2 projects
-              activeTasks: 3,    // Từ screenshot: web design (1 task) + learn python (2 tasks)
-              completedTasks: 0
-            },
-            success: true
-          };
+        // KIỂM TRA TÍNH ĐÚNG ĐẮN
+        if ((activeTasks + completedTasks) !== tasks.length) {
+          console.warn('⚠️ Cảnh báo: Tổng active + completed không khớp với tổng tasks!');
+          // Tự động điều chỉnh nếu có sai sót
+          activeTasks = tasks.length - completedTasks;
         }
 
         return {
@@ -204,15 +159,15 @@ export const useDashboardStats = () => {
         };
 
       } catch (error: unknown) {
-        // Xử lý lỗi cuối cùng
+        // Xử lý lỗi
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error('❌ [DEBUG] Lỗi fetch dashboard stats:', errorMessage);
         
         // Trả về giá trị mặc định khi có lỗi
         return {
           data: {
-            totalProjects: 2,
-            activeTasks: 3,
+            totalProjects: 0,
+            activeTasks: 0,
             completedTasks: 0
           },
           success: false,
@@ -221,8 +176,9 @@ export const useDashboardStats = () => {
       }
     },
     retry: 1,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000, // Giảm cache time xuống 30 giây để cập nhật nhanh hơn
     refetchOnWindowFocus: true,
+    refetchOnMount: true, // Tự refetch khi component mount
   });
 };
 
@@ -243,4 +199,24 @@ export const useRefetchDashboardStats = () => {
     console.log('🔄 Force refetching dashboard stats...');
     await queryClient.refetchQueries({ queryKey: ['dashboard-stats'] });
   };
+};
+
+// Hàm mới: Tự động refetch khi có thay đổi task
+export const useSubscribeToTaskUpdates = () => {
+  const queryClient = useQueryClient();
+  
+  // Trong thực tế, bạn có thể kết nối WebSocket hoặc polling
+  // Ở đây dùng polling đơn giản
+  const startPolling = (intervalMs = 10000) => {
+    console.log(`📡 Bắt đầu polling cập nhật tasks mỗi ${intervalMs/1000}s`);
+    
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    }, intervalMs);
+    
+    return () => clearInterval(interval);
+  };
+  
+  return { startPolling };
 };
