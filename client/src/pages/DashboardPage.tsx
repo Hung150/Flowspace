@@ -8,10 +8,10 @@ import {
   ClockIcon, 
   CheckCircleIcon,
   PlusIcon,
-  CalendarIcon,
   DocumentChartBarIcon,
   ChevronDownIcon,
-  XMarkIcon
+  XMarkIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 
 const DashboardPage = () => {
@@ -22,12 +22,21 @@ const DashboardPage = () => {
   
   const [showNewProjectModal, setShowNewProjectModal] = useState(false)
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
+  const [showSetDeadlineModal, setShowSetDeadlineModal] = useState(false)
   const [newProjectData, setNewProjectData] = useState({
     name: '',
     description: '',
     color: '#3b82f6'
   })
+  const [deadlineData, setDeadlineData] = useState({
+    projectId: '',
+    title: '',
+    description: '',
+    dueDate: '',
+    priority: 'medium'
+  })
   const [isCreating, setIsCreating] = useState(false)
+  const [isSettingDeadline, setIsSettingDeadline] = useState(false)
 
   console.log('📊 Dashboard Debug:', {
     stats: stats?.data,
@@ -72,25 +81,24 @@ const DashboardPage = () => {
       return
     }
     
-    // Nếu chỉ có 1 project, điều hướng luôn
     if (projects.length === 1) {
       navigate(`/projects/${projects[0].id}`)
     } else {
-      // Nếu có nhiều project, mở modal chọn
       setShowAddTaskModal(true)
     }
   }
 
   const handleSetDeadline = () => {
-    if (projects.length > 0) {
-      // Mở modal chọn project tương tự Add Task
-      if (projects.length === 1) {
-        navigate(`/projects/${projects[0].id}`)
-      } else {
-        setShowAddTaskModal(true)
-      }
-    } else {
+    if (projects.length === 0) {
       alert('Please create a project first')
+      return
+    }
+    
+    if (projects.length === 1) {
+      setDeadlineData(prev => ({ ...prev, projectId: projects[0].id }))
+      setShowSetDeadlineModal(true)
+    } else {
+      setShowSetDeadlineModal(true)
     }
   }
 
@@ -118,6 +126,50 @@ const DashboardPage = () => {
     }
   }
 
+  const handleSetTaskDeadline = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!deadlineData.projectId || !deadlineData.title.trim() || !deadlineData.dueDate) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    setIsSettingDeadline(true)
+    try {
+      // Gọi API để tạo task với deadline
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...deadlineData,
+          projectId: deadlineData.projectId,
+          status: 'pending'
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to create task')
+
+      alert('Task with deadline created successfully!')
+      setShowSetDeadlineModal(false)
+      setDeadlineData({
+        projectId: '',
+        title: '',
+        description: '',
+        dueDate: '',
+        priority: 'medium'
+      })
+      
+      // Refresh stats
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to create task:', error)
+      alert('Failed to create task. Please try again.')
+    } finally {
+      setIsSettingDeadline(false)
+    }
+  }
+
   const colors = [
     '#3b82f6', // Blue
     '#10b981', // Green
@@ -126,6 +178,26 @@ const DashboardPage = () => {
     '#ef4444', // Red
     '#ec4899', // Pink
   ]
+
+  const priorities = [
+    { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800' },
+    { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'high', label: 'High', color: 'bg-red-100 text-red-800' },
+  ]
+
+  // Tính toán ngày tối thiểu (ngày mai)
+  const getTomorrowDate = () => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return tomorrow.toISOString().split('T')[0]
+  }
+
+  // Tính toán ngày tối đa (1 năm sau)
+  const getMaxDate = () => {
+    const maxDate = new Date()
+    maxDate.setFullYear(maxDate.getFullYear() + 1)
+    return maxDate.toISOString().split('T')[0]
+  }
 
   // Hiển thị loading
   if (isLoading) {
@@ -254,7 +326,7 @@ const DashboardPage = () => {
             <p className="text-xs text-gray-500 mt-1">Create a new project</p>
           </button>
           
-          {/* Add Task với chức năng chọn project */}
+          {/* Add Task */}
           <button 
             onClick={handleAddTask}
             disabled={projects.length === 0}
@@ -294,12 +366,21 @@ const DashboardPage = () => {
                 : 'hover:bg-gray-50'
             }`}
           >
-            <CalendarIcon className={`h-8 w-8 mx-auto mb-2 ${
-              projects.length === 0 ? 'text-gray-400' : 'text-yellow-600'
-            }`} />
+            <div className="relative">
+              <CalendarDaysIcon className={`h-8 w-8 mx-auto mb-2 ${
+                projects.length === 0 ? 'text-gray-400' : 'text-yellow-600'
+              }`} />
+              {projects.length > 1 && (
+                <div className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <ChevronDownIcon className="h-3 w-3" />
+                </div>
+              )}
+            </div>
             <p className="font-medium">Set Deadline</p>
             <p className="text-xs text-gray-500 mt-1">
-              {projects.length === 0 ? 'No projects' : 'Set task deadlines'}
+              {projects.length === 0 
+                ? 'Create project first' 
+                : 'Create task with deadline'}
             </p>
           </button>
           
@@ -406,7 +487,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Add Task Modal - Cho phép chọn project */}
+      {/* Add Task Modal */}
       {showAddTaskModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
@@ -479,6 +560,172 @@ const DashboardPage = () => {
                 <span>Create New Project</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set Deadline Modal */}
+      {showSetDeadlineModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Set Task Deadline</h2>
+                <button
+                  onClick={() => {
+                    setShowSetDeadlineModal(false)
+                    setDeadlineData({
+                      projectId: '',
+                      title: '',
+                      description: '',
+                      dueDate: '',
+                      priority: 'medium'
+                    })
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <XMarkIcon className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+              <p className="text-gray-600 mt-1">Create a new task with deadline</p>
+            </div>
+
+            <form onSubmit={handleSetTaskDeadline} className="p-6 space-y-6">
+              {/* Select Project */}
+              {projects.length > 1 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Project *
+                  </label>
+                  <select
+                    required
+                    value={deadlineData.projectId}
+                    onChange={(e) => setDeadlineData({ ...deadlineData, projectId: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Choose a project...</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Task Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={deadlineData.title}
+                  onChange={(e) => setDeadlineData({ ...deadlineData, title: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Complete homepage design"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={deadlineData.description}
+                  onChange={(e) => setDeadlineData({ ...deadlineData, description: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Task details..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Due Date *
+                </label>
+                <div className="relative">
+                  <CalendarDaysIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="date"
+                    required
+                    value={deadlineData.dueDate}
+                    onChange={(e) => setDeadlineData({ ...deadlineData, dueDate: e.target.value })}
+                    className="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    min={getTomorrowDate()}
+                    max={getMaxDate()}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select a date from tomorrow to 1 year from now
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Priority
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {priorities.map((priority) => (
+                    <button
+                      key={priority.value}
+                      type="button"
+                      onClick={() => setDeadlineData({ ...deadlineData, priority: priority.value })}
+                      className={`px-4 py-2 rounded-lg border ${
+                        deadlineData.priority === priority.value
+                          ? `${priority.color} border-current`
+                          : 'border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {priority.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {deadlineData.dueDate && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-blue-700">
+                    <CalendarDaysIcon className="h-5 w-5" />
+                    <span className="font-medium">Deadline Set:</span>
+                    <span>{new Date(deadlineData.dueDate).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSetDeadlineModal(false)
+                    setDeadlineData({
+                      projectId: '',
+                      title: '',
+                      description: '',
+                      dueDate: '',
+                      priority: 'medium'
+                    })
+                  }}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={isSettingDeadline}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSettingDeadline || !deadlineData.title.trim() || !deadlineData.dueDate}
+                  className="flex-1 px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSettingDeadline ? 'Creating...' : 'Set Deadline'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
