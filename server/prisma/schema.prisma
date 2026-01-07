@@ -15,13 +15,13 @@ model User {
   avatar   String?
 
   // Quan hệ với Project (User là owner)
-  ownedProjects Project[] @relation("OwnedProjects", onDelete: Cascade) // THÊM onDelete: Cascade
+  ownedProjects Project[] @relation("OwnedProjects")
   // Quan hệ với Task (User được giao task)
-  assignedTasks Task[]    @relation("AssignedTasks", onDelete: SetNull) // THÊM onDelete: SetNull
+  assignedTasks Task[]    @relation("AssignedTasks")
   // Quan hệ với Task (User tạo task)
-  createdTasks  Task[]    @relation("CreatedTasks", onDelete: Cascade) // THÊM onDelete: Cascade
+  createdTasks  Task[]    @relation("CreatedTasks")
 
-  members Member[] @relation(onDelete: Cascade) // THÊM onDelete: Cascade
+  members Member[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -34,10 +34,10 @@ model Project {
   color       String? @default("#3b82f6")
 
   ownerId String
-  owner   User   @relation("OwnedProjects", fields: [ownerId], references: [id], onDelete: Cascade) // THÊM onDelete: Cascade
+  owner   User   @relation("OwnedProjects", fields: [ownerId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
 
-  tasks   Task[] @relation(onDelete: Cascade) // THÊM onDelete: Cascade
-  members Member[] @relation(onDelete: Cascade) // THÊM onDelete: Cascade
+  tasks   Task[] // KHÔNG có onDelete ở đây
+  members Member[] // KHÔNG có onDelete ở đây
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,13 +53,13 @@ model Task {
   order       Int       @default(0)
 
   projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // THÊM onDelete: Cascade
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
 
   assigneeId String?
-  assignee   User?   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull) // THÊM onDelete: SetNull
+  assignee   User?   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull) // onDelete Ở ĐÂY
 
   creatorId String
-  creator   User   @relation("CreatedTasks", fields: [creatorId], references: [id], onDelete: Cascade) // THÊM onDelete: Cascade
+  creator   User   @relation("CreatedTasks", fields: [creatorId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -70,10 +70,10 @@ model Member {
   role String @default("MEMBER")
 
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) // THÊM onDelete: Cascade
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
 
   projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // THÊM onDelete: Cascade
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
