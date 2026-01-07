@@ -9,7 +9,9 @@ import {
   CheckCircleIcon,
   PlusIcon,
   CalendarIcon,
-  DocumentChartBarIcon
+  DocumentChartBarIcon,
+  ChevronDownIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 const DashboardPage = () => {
@@ -19,6 +21,7 @@ const DashboardPage = () => {
   const { data: stats, isLoading: statsLoading } = useDashboardStats()
   
   const [showNewProjectModal, setShowNewProjectModal] = useState(false)
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false)
   const [newProjectData, setNewProjectData] = useState({
     name: '',
     description: '',
@@ -62,18 +65,30 @@ const DashboardPage = () => {
   }
 
   const handleAddTask = () => {
-    if (projects.length > 0) {
-      navigate(`/projects/${projects[0].id}`)
-    } else {
+    if (projects.length === 0) {
       if (window.confirm('You need a project first. Create a new project?')) {
         setShowNewProjectModal(true)
       }
+      return
+    }
+    
+    // Nếu chỉ có 1 project, điều hướng luôn
+    if (projects.length === 1) {
+      navigate(`/projects/${projects[0].id}`)
+    } else {
+      // Nếu có nhiều project, mở modal chọn
+      setShowAddTaskModal(true)
     }
   }
 
   const handleSetDeadline = () => {
     if (projects.length > 0) {
-      navigate(`/projects/${projects[0].id}`)
+      // Mở modal chọn project tương tự Add Task
+      if (projects.length === 1) {
+        navigate(`/projects/${projects[0].id}`)
+      } else {
+        setShowAddTaskModal(true)
+      }
     } else {
       alert('Please create a project first')
     }
@@ -225,7 +240,7 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* Quick Actions - ĐÃ CÓ CHỨC NĂNG */}
+      {/* Quick Actions */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h2 className="text-xl font-semibold mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -239,7 +254,7 @@ const DashboardPage = () => {
             <p className="text-xs text-gray-500 mt-1">Create a new project</p>
           </button>
           
-          {/* Add Task */}
+          {/* Add Task với chức năng chọn project */}
           <button 
             onClick={handleAddTask}
             disabled={projects.length === 0}
@@ -249,12 +264,23 @@ const DashboardPage = () => {
                 : 'hover:bg-gray-50'
             }`}
           >
-            <CheckCircleIcon className={`h-8 w-8 mx-auto mb-2 ${
-              projects.length === 0 ? 'text-gray-400' : 'text-green-600'
-            }`} />
+            <div className="relative">
+              <CheckCircleIcon className={`h-8 w-8 mx-auto mb-2 ${
+                projects.length === 0 ? 'text-gray-400' : 'text-green-600'
+              }`} />
+              {projects.length > 1 && (
+                <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <ChevronDownIcon className="h-3 w-3" />
+                </div>
+              )}
+            </div>
             <p className="font-medium">Add Task</p>
             <p className="text-xs text-gray-500 mt-1">
-              {projects.length === 0 ? 'Create project first' : 'Add to existing project'}
+              {projects.length === 0 
+                ? 'Create project first' 
+                : projects.length === 1 
+                  ? 'Add to project' 
+                  : 'Choose project to add'}
             </p>
           </button>
           
@@ -294,7 +320,15 @@ const DashboardPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl w-full max-w-md">
             <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold">Create New Project</h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Create New Project</h2>
+                <button
+                  onClick={() => setShowNewProjectModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <XMarkIcon className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
               <p className="text-gray-600 mt-1">Start organizing your work</p>
             </div>
 
@@ -368,6 +402,83 @@ const DashboardPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Task Modal - Cho phép chọn project */}
+      {showAddTaskModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Add Task to Project</h2>
+                <button
+                  onClick={() => setShowAddTaskModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <XMarkIcon className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+              <p className="text-gray-600 mt-1">Select a project to add task</p>
+            </div>
+
+            <div className="overflow-y-auto max-h-[60vh]">
+              <div className="p-6 space-y-3">
+                {projects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => {
+                      navigate(`/projects/${project.id}`)
+                      setShowAddTaskModal(false)
+                    }}
+                    className="w-full flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left group"
+                  >
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: project.color || '#3b82f6' }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{project.name}</p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {project.description || 'No description'}
+                        </p>
+                        <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                          <span className="flex items-center space-x-1">
+                            <CheckCircleIcon className="h-3 w-3" />
+                            <span>{project._count?.tasks || 0} tasks</span>
+                          </span>
+                          <span>•</span>
+                          <span>{project._count?.members || 1} members</span>
+                        </div>
+                      </div>
+                    </div>
+                    <svg 
+                      className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 ml-2" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 border-t bg-gray-50">
+              <button
+                onClick={() => {
+                  setShowAddTaskModal(false)
+                  setShowNewProjectModal(true)
+                }}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span>Create New Project</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
