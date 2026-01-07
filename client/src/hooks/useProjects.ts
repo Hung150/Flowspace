@@ -4,7 +4,6 @@ import type { Project } from '../types'
 
 export const useProjects = () => {
   const queryClient = useQueryClient()
-  queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
 
   const projectsQuery = useQuery({
     queryKey: ['projects'],
@@ -23,6 +22,7 @@ export const useProjects = () => {
     mutationFn: projectService.createProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 
@@ -38,8 +38,13 @@ export const useProjects = () => {
   const deleteProjectMutation = useMutation({
     mutationFn: projectService.deleteProject,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      console.log('🔄 Invalidating queries after successful delete');
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
     },
+    onError: (error: Error) => {
+      console.error('❌ Delete mutation error:', error.message);
+    }
   })
 
   return {
@@ -53,5 +58,6 @@ export const useProjects = () => {
     isCreating: createProjectMutation.isPending,
     isUpdating: updateProjectMutation.isPending,
     isDeleting: deleteProjectMutation.isPending,
+    deleteError: deleteProjectMutation.error,
   }
 }
