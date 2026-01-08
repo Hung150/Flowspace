@@ -8,75 +8,172 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(cuid())
-  email    String  @unique
-  password String
-  name     String?
-  avatar   String?
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  name      String?
+  avatar    String?
 
   // Quan hệ với Project (User là owner)
   ownedProjects Project[] @relation("OwnedProjects")
+  
   // Quan hệ với Task (User được giao task)
   assignedTasks Task[]    @relation("AssignedTasks")
+  
   // Quan hệ với Task (User tạo task)
   createdTasks  Task[]    @relation("CreatedTasks")
 
-  members Member[]
+  // Quan hệ với Member (User là thành viên của projects)
+  members       Member[]
+
+  // Quan hệ với Report (User tạo report)
+  createdReports Report[] @relation("CreatedReports")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Project {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
-  color       String? @default("#3b82f6")
+  color       String?  @default("#3b82f6")
+  status      String?  @default("active") // active, archived, completed
 
+  // Owner relationship
   ownerId String
-  owner   User   @relation("OwnedProjects", fields: [ownerId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
+  owner   User    @relation("OwnedProjects", fields: [ownerId], references: [id], onDelete: Cascade)
 
-  tasks   Task[] // KHÔNG có onDelete ở đây
-  members Member[] // KHÔNG có onDelete ở đây
+  // Project relationships
+  tasks   Task[]
+  members Member[]
+  reports Report[]
+
+  // Stats (optional - có thể tính toán từ tasks)
+  _count    ProjectCount?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Task {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String?
-  status      String    @default("TODO")
-  priority    String?   @default("MEDIUM")
+  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE, BLOCKED
+  priority    String?  @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
   dueDate     DateTime?
-  order       Int       @default(0)
+  order       Int      @default(0)
+  tags        String[] // Tags for categorization
 
+  // Project relationship
   projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  // User relationships
   assigneeId String?
-  assignee   User?   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull) // onDelete Ở ĐÂY
+  assignee   User?   @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
 
   creatorId String
-  creator   User   @relation("CreatedTasks", fields: [creatorId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
+  creator   User   @relation("CreatedTasks", fields: [creatorId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
 }
 
 model Member {
-  id   String @id @default(cuid())
-  role String @default("MEMBER")
+  id        String   @id @default(cuid())
+  role      String   @default("MEMBER") // OWNER, ADMIN, MEMBER, VIEWER
+  joinedAt  DateTime @default(now())
 
+  // User relationship
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Project relationship
   projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // onDelete Ở ĐÂY
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+// NEW: Report model for notes, reports, and comments
+model Report {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  type      String   @default("note") // note, report, comment, review
+  status    String   @default("draft") // draft, published, archived
+  tags      String[]
+
+  // Project relationship
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Author relationship
+  authorId  String
+  author    User    @relation("CreatedReports", fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([authorId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Optional: For project statistics
+model ProjectCount {
+  id        String  @id @default(cuid())
+  
+  // Relationships
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Count fields
+  tasks     Int     @default(0)
+  members   Int     @default(1) // including owner
+  reports   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Optional: Activity log for tracking changes
+model Activity {
+  id          String   @id @default(cuid())
+  type        String   // task_created, task_updated, project_created, etc.
+  description String
+  metadata    Json?    // Additional data
+
+  // User who performed the activity
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Related project
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Related task (optional)
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([type])
+  @@index([createdAt])
 }
