@@ -8,8 +8,8 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
+  id        String   @id @default(cuid())
+  email     String   @unique
   password  String
   name      String?
   avatar    String?
@@ -49,11 +49,10 @@ model Project {
   members Member[]
   reports Report[]
 
-  // Stats (optional - có thể tính toán từ tasks)
-  _count    ProjectCount?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
 }
 
 model Task {
@@ -111,7 +110,7 @@ model Member {
 model Report {
   id        String   @id @default(cuid())
   title     String
-  content   String   @db.Text
+  content   String
   type      String   @default("note") // note, report, comment, review
   status    String   @default("draft") // draft, published, archived
   tags      String[]
@@ -135,7 +134,7 @@ model Report {
 }
 
 // Optional: For project statistics
-model ProjectCount {
+model ProjectStats {
   id        String  @id @default(cuid())
   
   // Relationships
@@ -143,9 +142,10 @@ model ProjectCount {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   // Count fields
-  tasks     Int     @default(0)
-  members   Int     @default(1) // including owner
-  reports   Int     @default(0)
+  totalTasks    Int  @default(0)
+  activeTasks   Int  @default(0)
+  completedTasks Int @default(0)
+  totalMembers  Int  @default(1) // including owner
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
