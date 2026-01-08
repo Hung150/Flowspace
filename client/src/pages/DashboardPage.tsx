@@ -103,9 +103,10 @@ const DashboardPage = () => {
   }
 
   const handleViewReports = () => {
-    alert('Reports feature is coming soon!')
     if (projects.length > 0) {
-      navigate(`/projects/${projects[0].id}`)
+      navigate('/reports')
+    } else {
+      alert('Please create a project first to write reports')
     }
   }
 
