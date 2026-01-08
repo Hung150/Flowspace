@@ -42,32 +42,19 @@ const ReportsPage = () => {
   const [selectedProject, setSelectedProject] = useState<string>('all')
   const [showNewReportModal, setShowNewReportModal] = useState(false)
   const [editingReport, setEditingReport] = useState<EditingReport | null>(null)
+  
+  // Khởi tạo reportData với projectId rỗng, để user tự chọn
   const [reportData, setReportData] = useState<ReportData>({
     title: '',
     content: '',
     type: 'note',
-    projectId: '',
+    projectId: '', // Bắt đầu với rỗng
     tags: []
   })
+  
   const [tagInput, setTagInput] = useState('')
-  const [initialized, setInitialized] = useState(false)
 
-  // Initialize default project once when projects load
-  useEffect(() => {
-    if (!projectsLoading && projects.length > 0 && !initialized) {
-      const defaultProjectId = selectedProject !== 'all' 
-        ? selectedProject 
-        : projects[0]?.id || ''
-      
-      setReportData(prev => ({
-        ...prev,
-        projectId: defaultProjectId
-      }))
-      setInitialized(true)
-    }
-  }, [projects, projectsLoading, selectedProject, initialized])
-
-  // Fetch reports when selected project changes
+  // Chỉ fetch reports khi selected project thay đổi
   useEffect(() => {
     if (!projectsLoading && projects.length > 0) {
       fetchReports(selectedProject)
@@ -147,19 +134,14 @@ const ReportsPage = () => {
   }
 
   const resetReportData = useCallback(() => {
-    const defaultProjectId = selectedProject !== 'all' 
-      ? selectedProject 
-      : projects[0]?.id || ''
-    
     setReportData({
       title: '',
       content: '',
       type: 'note',
-      projectId: defaultProjectId,
+      projectId: '', // Reset về rỗng
       tags: []
     })
-    setInitialized(false) // Reset để reinitialize
-  }, [selectedProject, projects])
+  }, [])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -449,7 +431,7 @@ const ReportsPage = () => {
                       value={reportData.projectId}
                       onChange={(e) => setReportData(prev => ({ ...prev, projectId: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={selectedProject !== 'all'}
+                      // Không disable nữa, luôn cho phép chọn
                     >
                       <option value="">Select a project...</option>
                       {projects.map(project => (
@@ -533,7 +515,7 @@ const ReportsPage = () => {
                   <button
                     type="submit"
                     className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    disabled={!reportData.projectId || reportData.projectId === 'all'}
+                    disabled={!reportData.projectId}
                   >
                     {editingReport ? 'Update' : 'Create'}
                   </button>
