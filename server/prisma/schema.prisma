@@ -51,8 +51,8 @@ model Project {
   tasks   Task[]
   members Member[]
   reports Report[]
-  stats   ProjectStats?  // Thêm relation này
-  activities Activity[]   // Thêm relation này
+  stats   ProjectStats?  // 1-1 relationship
+  activities Activity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -145,7 +145,7 @@ model Report {
 model ProjectStats {
   id        String  @id @default(cuid())
   
-  // Relationships
+  // Relationships - ĐÃ SỬA: thêm project relation
   projectId String  @unique
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
