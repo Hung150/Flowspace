@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import Layout from '../components/Layout'
 import LoadingSpinner from '../components/LoadingSpinner'
+import ReportsPage from '../pages/ReportsPage'
 
 // Lazy load pages for better performance
 const LoginPage = lazy(() => import('../pages/LoginPage'))
@@ -27,6 +28,8 @@ const AppRoutes = () => {
           <Route path="projects/:id" element={<ProjectDetailPage />} />
           <Route path="team" element={<TeamPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          
         </Route>
         
         {/* 404 route */}
