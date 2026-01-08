@@ -7,7 +7,6 @@ import authRoutes from './routes/auth.routes';
 import projectRoutes from './routes/project.routes';
 import taskRoutes from './routes/task.routes';
 import dashboardRoutes from './routes/dashboard.routes';
-import reportRoutes from './routes/report.routes';
 
 dotenv.config();
 
@@ -77,13 +76,6 @@ app.get('/', (req: Request, res: Response) => {
       },
       dashboard: {
         stats: 'GET /api/dashboard/stats (protected)'
-      },
-      reports: {
-        list: 'GET /api/reports (protected)',
-        detail: 'GET /api/reports/:id (protected)',
-        create: 'POST /api/reports (protected)',
-        update: 'PUT /api/reports/:id (protected)',
-        delete: 'DELETE /api/reports/:id (protected)'
       }
     },
     github: 'https://github.com/Hung150/Flowspace',
@@ -111,7 +103,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/reports', reportRoutes);
 
 // 4. API Documentation (HTML page)
 app.get('/api/docs', (req: Request, res: Response) => {
@@ -264,7 +255,6 @@ app.get('/api/docs', (req: Request, res: Response) => {
           <span class="badge">Prisma</span>
           <span class="badge">JWT Auth</span>
           <span class="badge">CORS Enabled</span>
-          <span class="badge">Reports System</span>
         </div>
         
         <div class="test-buttons">
@@ -368,43 +358,6 @@ app.get('/api/docs', (req: Request, res: Response) => {
           </p>
         </div>
         
-        <h2 style="margin-top: 40px;">📝 Report Endpoints</h2>
-        
-        <div class="endpoint">
-          <span class="method get">GET</span>
-          <span class="url">/api/reports</span>
-          <span class="protected">PROTECTED</span>
-          <p class="description">Get all reports for current user (filter by projectId, type, status)</p>
-        </div>
-        
-        <div class="endpoint">
-          <span class="method post">POST</span>
-          <span class="url">/api/reports</span>
-          <span class="protected">PROTECTED</span>
-          <p class="description">Create a new report/note/comment</p>
-        </div>
-        
-        <div class="endpoint">
-          <span class="method get">GET</span>
-          <span class="url">/api/reports/:id</span>
-          <span class="protected">PROTECTED</span>
-          <p class="description">Get report details</p>
-        </div>
-        
-        <div class="endpoint">
-          <span class="method put">PUT</span>
-          <span class="url">/api/reports/:id</span>
-          <span class="protected">PROTECTED</span>
-          <p class="description">Update report</p>
-        </div>
-        
-        <div class="endpoint">
-          <span class="method delete">DELETE</span>
-          <span class="url">/api/reports/:id</span>
-          <span class="protected">PROTECTED</span>
-          <p class="description">Delete report</p>
-        </div>
-        
       </section>
       
       <footer>
@@ -413,7 +366,7 @@ app.get('/api/docs', (req: Request, res: Response) => {
           ⭐ View on GitHub
         </a>
         <p style="margin-top: 20px;">
-          <small>API Version 2.0.0 • Server: ${process.env.RENDER_EXTERNAL_URL || 'localhost:5000'} • CORS: Enabled • Reports: ✅ Added</small>
+          <small>API Version 2.0.0 • Server: ${process.env.RENDER_EXTERNAL_URL || 'localhost:5000'} • CORS: Enabled</small>
         </p>
       </footer>
     </div>
