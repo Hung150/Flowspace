@@ -29,6 +29,9 @@ model User {
   // Quan hệ với Report (User tạo report)
   createdReports Report[] @relation("CreatedReports")
 
+  // Quan hệ với Activity (User thực hiện activity)
+  activities    Activity[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -48,6 +51,8 @@ model Project {
   tasks   Task[]
   members Member[]
   reports Report[]
+  stats   ProjectStats?  // Thêm relation này
+  activities Activity[]   // Thêm relation này
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,6 +80,9 @@ model Task {
 
   creatorId String
   creator   User   @relation("CreatedTasks", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  // Activity relationship
+  activities Activity[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
