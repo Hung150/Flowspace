@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// QUAN TRỌNG: Thêm /api vào cuối URL
-const API_URL = import.meta.env.VITE_API_URL as string || 'http://localhost:5000/api';
+// SỬA: Dùng production URL
+const API_URL = import.meta.env.VITE_API_URL as string || 'https://flowspace-api.onrender.com/api';
 
 console.log('🚀 API Configuration Loaded:');
 console.log('📡 Base URL:', API_URL);
@@ -13,7 +13,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // Thêm timeout
+  timeout: 30000,
 })
 
 // Request interceptor to add token
@@ -54,7 +54,6 @@ api.interceptors.response.use(
     })
     
     if (error.response?.status === 401) {
-      // Token expired or invalid
       console.log('🔐 401 Unauthorized, redirecting to login...')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
