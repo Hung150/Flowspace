@@ -2,6 +2,13 @@ import app from './app';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 
+// QUAN TRỌNG: Import các routes
+import authRoutes from './routes/auth.routes';
+import projectRoutes from './routes/project.routes';
+import taskRoutes from './routes/task.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import reportRoutes from './routes/report.routes';
+
 // Load environment variables
 dotenv.config();
 
@@ -98,7 +105,10 @@ async function setupDatabase() {
   }
 }
 
-// Thêm health check endpoint
+// ==================== THÊM ROUTES VÀO APP ====================
+// QUAN TRỌNG: Phải thêm các routes vào app trước khi start server
+
+// Health check endpoint (đặt trước các routes khác)
 app.get('/api/health', async (req, res) => {
   try {
     // Kiểm tra database connection
@@ -109,7 +119,14 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString(),
       database: 'connected',
       uptime: process.uptime(),
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
+      routes: {
+        auth: '/api/auth',
+        projects: '/api/projects',
+        tasks: '/api/tasks',
+        dashboard: '/api/dashboard',
+        reports: '/api/reports'
+      }
     });
   } catch (error) {
     res.status(500).json({
@@ -119,6 +136,60 @@ app.get('/api/health', async (req, res) => {
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
+});
+
+// Thêm các API routes
+console.log('🔗 Mounting API routes...');
+
+// Đảm bảo routes được mount với prefix /api
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reports', reportRoutes);
+
+console.log('✅ API routes mounted successfully');
+console.log('📋 Available endpoints:');
+console.log('   - GET    /api/health');
+console.log('   - GET    /api/projects');
+console.log('   - POST   /api/projects');
+console.log('   - GET    /api/tasks');
+console.log('   - GET    /api/dashboard/stats');
+console.log('   - GET    /api/reports');
+
+// 404 handler cho API routes không tồn tại
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'API endpoint not found',
+    availableEndpoints: [
+      '/api/health',
+      '/api/auth/login',
+      '/api/auth/register',
+      '/api/projects',
+      '/api/tasks',
+      '/api/dashboard/stats',
+      '/api/reports'
+    ]
+  });
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: '🚀 FlowSpace API Server',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      projects: '/api/projects',
+      tasks: '/api/tasks',
+      dashboard: '/api/dashboard',
+      reports: '/api/reports'
+    },
+    documentation: 'See /api/health for more details',
+    github: 'https://github.com/Hung150/Flowspace'
+  });
 });
 
 // Xử lý shutdown gracefully
@@ -143,9 +214,17 @@ setupDatabase().then(() => {
 ---
 ✅ Local: http://localhost:${PORT}
 🌐 Production: https://flowspace-api.onrender.com
-📄 Health: http://localhost:${PORT}/api/health
-📚 Docs: http://localhost:${PORT}/api/docs (if available)
+📄 Health: https://flowspace-api.onrender.com/api/health
+📚 Docs: https://flowspace-api.onrender.com/api/docs
 ⭐ Github: https://github.com/Hung150/Flowspace
+---
+📋 Available Endpoints:
+   - GET    /api/health
+   - GET    /api/projects
+   - POST   /api/projects
+   - GET    /api/tasks
+   - GET    /api/dashboard/stats
+   - GET    /api/reports
 ---
 ⏰ ${new Date().toLocaleString()}
 ---
@@ -167,7 +246,8 @@ setupDatabase().then(() => {
   console.log('⚠️ Starting server anyway...');
   
   // Vẫn start server ngay cả khi database có vấn đề
-  app.listen(PORT, HOST, () => {
-    console.log(`Server started on port ${PORT} (database may have issues)`);
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`⚠️ Server started on port ${PORT} (database may have issues)`);
+    console.log('⚠️ API routes may not work without database connection');
   });
 });
