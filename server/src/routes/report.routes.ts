@@ -1,12 +1,12 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticateToken } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth'
 
 const router = express.Router()
 const prisma = new PrismaClient()
 
 // GET /api/reports - Lấy danh sách reports
-router.get('/', authenticateToken, async (req: any, res) => {
+router.get('/', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.id
     const { projectId, type, status } = req.query
@@ -58,7 +58,7 @@ router.get('/', authenticateToken, async (req: any, res) => {
 })
 
 // GET /api/reports/:id - Lấy report cụ thể
-router.get('/:id', authenticateToken, async (req: any, res) => {
+router.get('/:id', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.id
     const { id } = req.params
@@ -98,7 +98,7 @@ router.get('/:id', authenticateToken, async (req: any, res) => {
 })
 
 // POST /api/reports - Tạo report mới
-router.post('/', authenticateToken, async (req: any, res) => {
+router.post('/', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.id
     const { title, content, type, status, projectId, tags } = req.body
@@ -160,7 +160,7 @@ router.post('/', authenticateToken, async (req: any, res) => {
 })
 
 // PUT /api/reports/:id - Cập nhật report
-router.put('/:id', authenticateToken, async (req: any, res) => {
+router.put('/:id', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.id
     const { id } = req.params
@@ -214,7 +214,7 @@ router.put('/:id', authenticateToken, async (req: any, res) => {
 })
 
 // DELETE /api/reports/:id - Xóa report
-router.delete('/:id', authenticateToken, async (req: any, res) => {
+router.delete('/:id', authMiddleware, async (req: any, res) => {
   try {
     const userId = req.user.id
     const { id } = req.params
