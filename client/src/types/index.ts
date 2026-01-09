@@ -66,3 +66,54 @@ export interface ListResponse<T> {
   items: T[]
   total: number
 }
+
+// Thêm vào cuối file types của bạn
+
+// Team Member type
+export interface TeamMember {
+  id: string;
+  role: string;
+  userId: string;
+  projectId: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    avatar: string | null;
+  };
+}
+
+// Project Team (for /api/teams response)
+export interface ProjectTeam {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  role: string; // User's role in this project (MEMBER, etc.)
+  owner: {
+    id: string;
+    email: string;
+    name: string | null;
+  };
+  stats: {
+    tasks: number;
+    members: number;
+  };
+  joinedAt: string; // When user joined this project
+}
+
+// Request/Response types for team API
+export interface AddMemberRequest {
+  userId: string;
+  role: string;
+}
+
+export interface UpdateMemberRoleRequest {
+  role: string;
+}
+
+export interface RemoveMemberResponse {
+  message: string;
+}
