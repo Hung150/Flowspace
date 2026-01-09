@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { teamAPI } from '../services/api';
 import { ProjectTeam } from '../types';
 import ProjectTeamModal from '../components/team/ProjectTeamModal';
+import { useAuth } from '../hooks/useAuth';
 
 const TeamPage = () => {
   const [teams, setTeams] = useState<ProjectTeam[]>([]);
@@ -9,6 +10,8 @@ const TeamPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectTeam | null>(null);
   const [showTeamModal, setShowTeamModal] = useState(false);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchTeams();
@@ -28,20 +31,10 @@ const TeamPage = () => {
     }
   };
 
-  // THÊM: Hàm xử lý click project
+  // Hàm xử lý click project
   const handleProjectClick = (project: ProjectTeam) => {
     setSelectedProject(project);
     setShowTeamModal(true);
-  };
-
-  // THÊM: Hàm lấy currentUserId (bạn cần sửa lại theo auth của mình)
-  const getCurrentUserId = () => {
-    // Ví dụ: lấy từ localStorage
-    // const userData = localStorage.getItem('user');
-    // return userData ? JSON.parse(userData).id : '';
-    
-    // Tạm thời trả về chuỗi rỗng, bạn cần sửa
-    return '';
   };
 
   if (loading) {
@@ -145,7 +138,6 @@ const TeamPage = () => {
               <div
                 key={team.id}
                 className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
-                // THÊM: Sửa onClick thành handleProjectClick
                 onClick={() => handleProjectClick(team)}
               >
                 <div className="flex items-center justify-between">
@@ -195,7 +187,7 @@ const TeamPage = () => {
         )}
       </div>
 
-      {/* THÊM: Modal hiển thị chi tiết team */}
+      {/* Modal hiển thị chi tiết team */}
       {selectedProject && (
         <ProjectTeamModal
           project={selectedProject}
@@ -204,7 +196,7 @@ const TeamPage = () => {
             setShowTeamModal(false);
             setSelectedProject(null);
           }}
-          currentUserId={getCurrentUserId()}
+          currentUserId={user?.id || ''}
         />
       )}
     </div>
