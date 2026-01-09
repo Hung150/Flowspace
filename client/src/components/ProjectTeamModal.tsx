@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { teamAPI } from '../../services/api';
-import { TeamMember, ProjectTeam } from '../../types';
+import { teamAPI } from '../services/api';
+import { TeamMember, ProjectTeam } from '../types';
 
 interface ProjectTeamModalProps {
   project: ProjectTeam;
