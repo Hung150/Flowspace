@@ -19,9 +19,15 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   try {
+    console.log('🕐 [' + new Date().toISOString() + '] [AUTH] Path:', req.path);
+    console.log('🔐 [AUTH] Headers:', JSON.stringify(req.headers));
+    console.log('🌐 [AUTH] Origin:', req.headers.origin);
+
     const authHeader = req.headers.authorization;
+    console.log('🔑 [AUTH] Authorization header:', authHeader || 'MISSING');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('❌ [AUTH] No valid Bearer token');
       return res.status(401).json({
         status: 'error',
         message: 'No token provided'
@@ -29,6 +35,7 @@ export const authMiddleware = (
     }
 
     const token = authHeader.split(' ')[1];
+    console.log('✅ [AUTH] Token extracted, length:', token.length);
     const decoded = verifyToken(token);
 
     if (!decoded || typeof decoded !== 'object') {
