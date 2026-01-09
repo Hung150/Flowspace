@@ -14,20 +14,56 @@ const TeamPage = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log('🔧 [DEBUG] TeamPage component mounted');
     fetchTeams();
   }, []);
 
   const fetchTeams = async () => {
     try {
       setLoading(true);
+      console.log('🔍 [DEBUG] Starting fetchTeams...');
+      
       const data = await teamAPI.getTeams();
+      console.log('✅ [DEBUG] Teams data received from API');
+      console.log('📊 [DEBUG] Data type:', typeof data);
+      console.log('🔢 [DEBUG] Data length:', data?.length || 0);
+      
+      // Kiểm tra data trước khi set state
+      if (!data) {
+        console.error('❌ [DEBUG] Data is null or undefined');
+        throw new Error('No data received from server');
+      }
+      
+      if (!Array.isArray(data)) {
+        console.error('❌ [DEBUG] Data is not an array, type:', typeof data);
+        console.error('❌ [DEBUG] Actual data structure:', data);
+        // Set empty array để UI không bị lỗi
+        setTeams([]);
+        setError(null);
+        return;
+      }
+      
+      console.log('✅ [DEBUG] Data is valid array, setting state...');
       setTeams(data);
       setError(null);
-    } catch (err) {
-      setError('Failed to load teams');
-      console.error(err);
+      console.log('✅ [DEBUG] State updated successfully');
+      
+    } catch (error) {
+      console.error('❌ [DEBUG] ERROR in fetchTeams:', error);
+      
+      // Hiển thị error message cho user
+      const errorMsg = error instanceof Error 
+        ? error.message 
+        : 'Failed to load teams';
+      
+      setError(errorMsg);
+      
+      // Vẫn set empty array để UI không bị break
+      setTeams([]);
+      
     } finally {
       setLoading(false);
+      console.log('🏁 [DEBUG] Loading state set to false');
     }
   };
 
