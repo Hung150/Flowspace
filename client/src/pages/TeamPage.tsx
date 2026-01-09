@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { teamAPI } from '../services/api';
 import { ProjectTeam } from '../types';
-import ProjectTeamModal from '../components/team/ProjectTeamModal';
+import ProjectTeamModal from '../components/ProjectTeamModal';
 import { useAuth } from '../hooks/useAuth';
 
 const TeamPage = () => {
