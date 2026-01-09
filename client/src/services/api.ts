@@ -1,7 +1,20 @@
 import axios from 'axios'
 import { ProjectTeam, TeamMember, AddMemberRequest, UpdateMemberRoleRequest, RemoveMemberResponse } from '../types/index';
 
-const API_URL = import.meta.env.VITE_API_URL as string || 'http://localhost:5000/api';
+const getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL as string;
+  console.log('🔍 [API] VITE_API_URL from env:', envUrl);
+  
+  if (envUrl) {
+    // Production: đảm bảo có /api
+    return envUrl.endsWith('/api') ? envUrl : envUrl + '/api';
+  }
+  // Development
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = getApiUrl();
+console.log('🌐 [API] Final URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
