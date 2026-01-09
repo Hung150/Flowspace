@@ -1,10 +1,17 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
+interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    email: string;
+  };
+}
+
 const prisma = new PrismaClient();
 
 // 1. Lấy tất cả members trong project
-export const getProjectMembers = async (req: Request, res: Response) => {
+export const getProjectMembers = async (req: AuthRequest, res: Response) => {
   try {
     const { projectId } = req.params;
     
@@ -31,7 +38,7 @@ export const getProjectMembers = async (req: Request, res: Response) => {
 };
 
 // 2. Thêm member vào project
-export const addMemberToProject = async (req: Request, res: Response) => {
+export const addMemberToProject = async (req: AuthRequest, res: Response) => {
   try {
     const { projectId } = req.params;
     const { userId, role = 'MEMBER' } = req.body;
@@ -102,7 +109,7 @@ export const addMemberToProject = async (req: Request, res: Response) => {
 };
 
 // 3. Cập nhật role của member
-export const updateMemberRole = async (req: Request, res: Response) => {
+export const updateMemberRole = async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, memberId } = req.params;
     const { role } = req.body;
@@ -149,7 +156,7 @@ export const updateMemberRole = async (req: Request, res: Response) => {
 };
 
 // 4. Xóa member khỏi project
-export const removeMemberFromProject = async (req: Request, res: Response) => {
+export const removeMemberFromProject = async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, memberId } = req.params;
     const currentUserId = req.user?.userId;
@@ -195,7 +202,7 @@ export const removeMemberFromProject = async (req: Request, res: Response) => {
 };
 
 // 5. Lấy tất cả projects mà user là member
-export const getUserTeams = async (req: Request, res: Response) => {
+export const getUserTeams = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
 
