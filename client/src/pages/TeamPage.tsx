@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { teamAPI } from '../services/api';
 import { ProjectTeam } from '../types';
-import { Users, Folder, CheckCircle, Clock } from 'lucide-react';
 
 const TeamPage = () => {
   const [teams, setTeams] = useState<ProjectTeam[]>([]);
@@ -62,57 +61,45 @@ const TeamPage = () => {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Simple version without icons */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Projects</p>
-              <p className="text-2xl font-bold">{teams.length}</p>
-            </div>
-            <Folder className="w-8 h-8 text-blue-500" />
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div>
+            <p className="text-sm text-gray-500">Total Projects</p>
+            <p className="text-2xl font-bold text-gray-900">{teams.length}</p>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Members</p>
-              <p className="text-2xl font-bold">
-                {teams.reduce((sum, team) => sum + team.stats.members, 0)}
-              </p>
-            </div>
-            <Users className="w-8 h-8 text-green-500" />
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div>
+            <p className="text-sm text-gray-500">Total Members</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {teams.reduce((sum, team) => sum + team.stats.members, 0)}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Tasks</p>
-              <p className="text-2xl font-bold">
-                {teams.reduce((sum, team) => sum + team.stats.tasks, 0)}
-              </p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-purple-500" />
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div>
+            <p className="text-sm text-gray-500">Total Tasks</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {teams.reduce((sum, team) => sum + team.stats.tasks, 0)}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Your Role</p>
-              <p className="text-lg font-semibold capitalize">
-                {teams.find(t => t.role)?.role.toLowerCase() || 'Member'}
-              </p>
-            </div>
-            <Clock className="w-8 h-8 text-orange-500" />
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div>
+            <p className="text-sm text-gray-500">Your Role</p>
+            <p className="text-lg font-semibold text-gray-900 capitalize">
+              {teams.find(t => t.role)?.role.toLowerCase() || 'Member'}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Projects List */}
-      <div className="bg-white border border-gray-200 rounded-lg">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Your Project Teams</h2>
           <p className="text-sm text-gray-600 mt-1">
@@ -122,11 +109,16 @@ const TeamPage = () => {
 
         {teams.length === 0 ? (
           <div className="p-12 text-center">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl text-gray-400">👥</span>
+            </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No teams yet</h3>
             <p className="text-gray-600 mb-4">
               You haven't joined any project teams. Create or join a project to get started.
             </p>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Create Project
+            </button>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
@@ -150,11 +142,11 @@ const TeamPage = () => {
                     <div>
                       <h3 className="font-semibold text-gray-900">{team.name}</h3>
                       <p className="text-sm text-gray-600">{team.description || 'No description'}</p>
-                      <div className="flex items-center space-x-4 mt-2">
+                      <div className="flex flex-wrap items-center gap-3 mt-2">
                         <span className="text-sm text-gray-500">
-                          Owner: {team.owner.name || team.owner.email}
+                          <span className="font-medium">Owner:</span> {team.owner.name || team.owner.email}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm px-2 py-1 bg-blue-50 text-blue-700 rounded">
                           Your role: <span className="font-medium capitalize">{team.role.toLowerCase()}</span>
                         </span>
                         <span className="text-sm text-gray-500">
