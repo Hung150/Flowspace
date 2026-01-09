@@ -204,6 +204,9 @@ export const removeMemberFromProject = async (req: AuthRequest, res: Response) =
 // 5. Lấy tất cả projects mà user là member
 export const getUserTeams = async (req: AuthRequest, res: Response) => {
   try {
+    console.log('👤 [TEAMS] User ID from auth:', req.user?.userId);
+    console.log('📅 [TEAMS] Request time:', new Date().toISOString());
+    
     const userId = req.user?.userId;
 
     const memberships = await prisma.member.findMany({
