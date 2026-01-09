@@ -37,4 +37,39 @@ api.interceptors.response.use(
   }
 )
 
+
+// Team API functions
+export const teamAPI = {
+  // Lấy tất cả teams (projects) user tham gia
+  getTeams: async (): Promise<any[]> => {
+    const response = await api.get('/teams');
+    return response.data;
+  },
+
+  // Lấy members của project
+  getProjectMembers: async (projectId: string): Promise<any[]> => {
+    const response = await api.get(`/projects/${projectId}/members`);
+    return response.data;
+  },
+
+  // Thêm member vào project
+  addMember: async (projectId: string, userId: string, role: string = 'MEMBER'): Promise<any> => {
+    const response = await api.post(`/projects/${projectId}/members`, { userId, role });
+    return response.data;
+  },
+
+  // Cập nhật role của member
+  updateMemberRole: async (projectId: string, memberId: string, role: string): Promise<any> => {
+    const response = await api.put(`/projects/${projectId}/members/${memberId}`, { role });
+    return response.data;
+  },
+
+  // Xóa member khỏi project
+  removeMember: async (projectId: string, memberId: string): Promise<any> => {
+    const response = await api.delete(`/projects/${projectId}/members/${memberId}`);
+    return response.data;
+  }
+};
+
+
 export default api
