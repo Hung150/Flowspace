@@ -55,13 +55,13 @@ export const teamAPI = {
 
   // Thêm member vào project
   addMember: async (projectId: string, data: AddMemberRequest): Promise<TeamMember> => {
-    const response = await api.post(`/projects/${projectId}/members`, { userId, role });
+    const response = await api.post(`/projects/${projectId}/members`, data);
     return response.data;
   },
 
   // Cập nhật role của member
   updateMemberRole: async (projectId: string, memberId: string, data: UpdateMemberRoleRequest): Promise<TeamMember> => {
-    const response = await api.put(`/projects/${projectId}/members/${memberId}`, { role });
+    const response = await api.put(`/projects/${projectId}/members/${memberId}`, data);
     return response.data;
   },
 
