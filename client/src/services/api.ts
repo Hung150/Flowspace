@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { ProjectTeam, TeamMember, AddMemberRequest, UpdateMemberRoleRequest, RemoveMemberResponse } from '../types/index';
 
-const API_URL = import.meta.env.VITE_API_URL as string || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL as string || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -13,7 +13,11 @@ const api = axios.create({
 // Request interceptor to add token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token');
+    
+    console.log('🌐 [API] Making request to endpoint');
+    console.log('🔑 [API] Token:', token ? 'Exists' : 'Missing');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
