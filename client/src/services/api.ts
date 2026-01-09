@@ -1,7 +1,10 @@
 import axios from 'axios'
 import { ProjectTeam, TeamMember, AddMemberRequest, UpdateMemberRoleRequest, RemoveMemberResponse } from '../types/index';
 
-const API_URL = import.meta.env.VITE_API_URL as string || 'http://localhost:5000/api';
+const base = import.meta.env.VITE_API_URL as string || 'http://localhost:5000';
+const API_URL = base.endsWith('/api') ? base : base + '/api';
+console.log('🔧 [API] Base from env:', base);
+console.log('🌐 [API] Final URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
