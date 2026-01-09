@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes';
 import projectRoutes from './routes/project.routes';
 import taskRoutes from './routes/task.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import memberRoutes from './routes/member.routes';
 
 dotenv.config();
 
@@ -103,6 +104,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api', memberRoutes);
 
 // 4. API Documentation (HTML page)
 app.get('/api/docs', (req: Request, res: Response) => {
