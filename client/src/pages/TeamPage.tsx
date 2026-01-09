@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { teamAPI } from '../services/api';
 import { ProjectTeam } from '../types';
+import ProjectTeamModal from '../components/team/ProjectTeamModal';
 
 const TeamPage = () => {
   const [teams, setTeams] = useState<ProjectTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectTeam | null>(null);
+  const [showTeamModal, setShowTeamModal] = useState(false);
 
   useEffect(() => {
     fetchTeams();
@@ -23,6 +26,22 @@ const TeamPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // THÊM: Hàm xử lý click project
+  const handleProjectClick = (project: ProjectTeam) => {
+    setSelectedProject(project);
+    setShowTeamModal(true);
+  };
+
+  // THÊM: Hàm lấy currentUserId (bạn cần sửa lại theo auth của mình)
+  const getCurrentUserId = () => {
+    // Ví dụ: lấy từ localStorage
+    // const userData = localStorage.getItem('user');
+    // return userData ? JSON.parse(userData).id : '';
+    
+    // Tạm thời trả về chuỗi rỗng, bạn cần sửa
+    return '';
   };
 
   if (loading) {
@@ -126,10 +145,8 @@ const TeamPage = () => {
               <div
                 key={team.id}
                 className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => {
-                  // We'll implement project detail view later
-                  console.log('View team:', team.id);
-                }}
+                // THÊM: Sửa onClick thành handleProjectClick
+                onClick={() => handleProjectClick(team)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -177,6 +194,19 @@ const TeamPage = () => {
           </div>
         )}
       </div>
+
+      {/* THÊM: Modal hiển thị chi tiết team */}
+      {selectedProject && (
+        <ProjectTeamModal
+          project={selectedProject}
+          isOpen={showTeamModal}
+          onClose={() => {
+            setShowTeamModal(false);
+            setSelectedProject(null);
+          }}
+          currentUserId={getCurrentUserId()}
+        />
+      )}
     </div>
   );
 };
