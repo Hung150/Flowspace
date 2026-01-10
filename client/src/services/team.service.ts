@@ -7,6 +7,15 @@ import {
   RemoveMemberResponse
 } from '../types';
 
+// Interface mới
+export interface UserSearchResult {
+  id: string;
+  email: string;
+  name: string | null;
+  avatar: string | null;
+  createdAt: string;
+}
+
 // Sử dụng base URL giống api.ts nhưng thêm /api cho team endpoints
 const BASE_URL = import.meta.env.VITE_API_URL as string || 'http://localhost:5000';
 const TEAM_API_URL = BASE_URL + '/api';
@@ -130,6 +139,23 @@ export const teamService = {
     } catch (error) {
       console.error(`❌ [TEAM SERVICE] Failed to remove member ${memberId}:`, error);
       throw error;
+    }
+  },
+
+  // HÀM MỚI: Tìm kiếm users theo email
+  searchUsers: async (query: string): Promise<UserSearchResult[]> => {
+    console.log('🔍 [TEAM SERVICE] Searching users:', query);
+    try {
+      if (!query || query.length < 2) {
+        return [];
+      }
+      
+      const response = await teamApi.get(`/users/search?email=${encodeURIComponent(query)}`);
+      console.log('✅ [TEAM SERVICE] Search results:', response.data.length);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [TEAM SERVICE] Failed to search users:', error);
+      return [];
     }
   },
 };
