@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { teamAPI } from '../services/api';
 import { TeamMember, ProjectTeam, AddMemberRequest } from '../types';
 import { UserSearchResult, teamService } from '../services/team.service';
 
@@ -20,23 +19,29 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
-  const [newMemberEmail, setNewMemberEmail] = useState('');
-  const [newMemberRole, setNewMemberRole] = useState('MEMBER');
-  const [addingMember, setAddingMember] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
+  const [newMemberRole, setNewMemberRole] = useState('MEMBER');
+  const [addingMember, setAddingMember] = useState(false);
 
   const fetchMembers = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await teamAPI.getProjectMembers(project.id);
-      setMembers(data);
       setError(null);
+      
+      console.log('🔍 [MODAL] Fetching members for project:', project.id);
+      
+      const data = await teamService.getProjectMembers(project.id);
+      
+      console.log('✅ [MODAL] Members fetched:', data?.length || 0);
+      setMembers(data || []);
+      
     } catch (err) {
-      setError('Failed to load team members');
-      console.error(err);
+      console.error('❌ [MODAL] Failed to load team members:', err);
+      setError('Failed to load team members. Please try again.');
+      setMembers([]);
     } finally {
       setLoading(false);
     }
@@ -44,6 +49,7 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
 
   useEffect(() => {
     if (isOpen && project) {
+      console.log('🔄 [MODAL] Modal opened, fetching members...');
       fetchMembers();
     }
   }, [isOpen, project, fetchMembers]);
@@ -58,22 +64,19 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
     
     setSearching(true);
     try {
+      console.log('🔍 [MODAL] Searching users:', query);
       const results = await teamService.searchUsers(query);
+      console.log('✅ [MODAL] Search results:', results.length);
       setSearchResults(results);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('❌ [MODAL] Search error:', error);
+      setSearchResults([]);
     } finally {
       setSearching(false);
     }
   };
 
   const handleAddMember = async () => {
-    if (!newMemberEmail.trim()) {
-      alert('Please enter email address');
-      return;
-    }
-
-    // Kiểm tra xem có selectedUser không
     if (!selectedUser) {
       alert('Please search and select a user first');
       return;
@@ -82,7 +85,8 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
     try {
       setAddingMember(true);
       
-      // Chỉ gửi userId và role theo đúng AddMemberRequest interface
+      console.log('➕ [MODAL] Adding member:', selectedUser.email);
+      
       const requestData: AddMemberRequest = { 
         userId: selectedUser.id, 
         role: newMemberRole 
@@ -90,26 +94,34 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
       
       await teamService.addMember(project.id, requestData);
       
+      console.log('✅ [MODAL] Member added successfully');
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       await fetchMembers();
       
       setShowAddMember(false);
       setSearchQuery('');
       setSearchResults([]);
       setSelectedUser(null);
-      setNewMemberEmail('');
       setNewMemberRole('MEMBER');
       
-    } catch (err: unknown) {
-      console.error('Failed to add member:', err);
-      let errorMessage = 'Failed to add member';
+      alert(`${selectedUser.email} has been added to the project successfully!`);
       
+    } catch (err: unknown) {
+      console.error('❌ [MODAL] Failed to add member:', err);
+      
+      let errorMessage = 'Failed to add member';
       if (err && typeof err === 'object') {
-        const axiosError = err as { response?: { data?: { error?: string } } };
+        const axiosError = err as { response?: { data?: { error?: string; message?: string } } };
         if (axiosError.response?.data?.error) {
           errorMessage = axiosError.response.data.error;
+        } else if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
         }
       }
-      alert(errorMessage);
+      
+      alert(`Error: ${errorMessage}`);
     } finally {
       setAddingMember(false);
     }
@@ -117,12 +129,17 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
 
   const handleUpdateRole = async (memberId: string, newRole: string) => {
     try {
-      await teamAPI.updateMemberRole(project.id, memberId, { role: newRole });
+      console.log('✏️ [MODAL] Updating role for member:', memberId);
+      await teamService.updateMemberRole(project.id, memberId, { role: newRole });
+      
       setMembers(members.map(member => 
         member.id === memberId ? { ...member, role: newRole } : member
       ));
+      
+      console.log('✅ [MODAL] Role updated successfully');
     } catch (err) {
-      console.error('Failed to update role:', err);
+      console.error('❌ [MODAL] Failed to update role:', err);
+      alert('Failed to update role. Please try again.');
     }
   };
 
@@ -130,10 +147,15 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
     if (!confirm('Are you sure you want to remove this member?')) return;
 
     try {
-      await teamAPI.removeMember(project.id, memberId);
+      console.log('🗑️ [MODAL] Removing member:', memberId);
+      await teamService.removeMember(project.id, memberId);
+      
       setMembers(members.filter(member => member.id !== memberId));
+      
+      console.log('✅ [MODAL] Member removed successfully');
     } catch (err) {
-      console.error('Failed to remove member:', err);
+      console.error('❌ [MODAL] Failed to remove member:', err);
+      alert('Failed to remove member. Please try again.');
     }
   };
 
@@ -214,7 +236,6 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
                     }`}
                     onClick={() => {
                       setSelectedUser(user);
-                      setNewMemberEmail(user.email);
                       setSearchResults([]);
                       setSearchQuery(user.email);
                     }}
@@ -262,7 +283,7 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
                   <button
                     onClick={() => {
                       setSelectedUser(null);
-                      setNewMemberEmail('');
+                      setSearchQuery('');
                     }}
                     className="text-sm text-gray-500 hover:text-gray-700"
                   >
@@ -303,7 +324,6 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
                       setSearchQuery('');
                       setSearchResults([]);
                       setSelectedUser(null);
-                      setNewMemberEmail('');
                     }}
                     className="px-6 py-2 text-gray-600 hover:text-gray-800"
                   >
@@ -326,16 +346,21 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
             <div className="p-12 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading members...</p>
+              <p className="text-xs text-gray-500 mt-2">Project ID: {project.id}</p>
             </div>
           ) : error ? (
             <div className="p-6">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-700">{error}</p>
+                <p className="text-red-700 font-medium">{error}</p>
+                <div className="mt-2 text-sm text-red-600">
+                  <p>Endpoint: GET /projects/{project.id}/members</p>
+                  <p>Please check if this endpoint exists in your backend.</p>
+                </div>
                 <button
                   onClick={fetchMembers}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                 >
-                  Retry
+                  Retry Loading Members
                 </button>
               </div>
             </div>
@@ -345,11 +370,19 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
                 <span className="text-2xl text-gray-400">👥</span>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No members yet</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 {isOwner 
                   ? 'Add members to collaborate on this project.' 
                   : 'Only project owner can add members.'}
               </p>
+              {isOwner && (
+                <button
+                  onClick={() => setShowAddMember(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  + Add First Member
+                </button>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
