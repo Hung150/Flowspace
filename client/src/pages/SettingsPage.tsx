@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   User, Lock, Bell, Users, CreditCard, Settings as SettingsIcon, 
   Palette, Globe, Moon, Trash2, LogOut, Save, Upload 
