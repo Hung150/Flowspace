@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { teamAPI } from '../services/api';
+import { teamService } from '../services/team.service';
 import { ProjectTeam } from '../types';
 import ProjectTeamModal from '../components/ProjectTeamModal';
 import { useAuth } from '../hooks/useAuth';
@@ -23,7 +23,8 @@ const TeamPage = () => {
       setLoading(true);
       console.log('🔍 [DEBUG] Starting fetchTeams...');
       
-      const data = await teamAPI.getTeams();
+      const data = await teamService.getTeams();
+      
       console.log('✅ [DEBUG] Teams data received from API');
       console.log('📊 [DEBUG] Data type:', typeof data);
       console.log('🔢 [DEBUG] Data length:', data?.length || 0);
