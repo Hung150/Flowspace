@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { teamAPI } from '../services/api';
-import { TeamMember, ProjectTeam } from '../types';
+import { TeamMember, ProjectTeam, AddMemberRequest } from '../types';
+import { UserSearchResult, teamService } from '../services/team.service';
 
 interface ProjectTeamModalProps {
   project: ProjectTeam;
@@ -22,14 +23,12 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('MEMBER');
   const [addingMember, setAddingMember] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
 
-  useEffect(() => {
-    if (isOpen && project) {
-      fetchMembers();
-    }
-  }, [isOpen, project]);
-
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       setLoading(true);
       const data = await teamAPI.getProjectMembers(project.id);
@@ -41,20 +40,76 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
     } finally {
       setLoading(false);
     }
+  }, [project.id]);
+
+  useEffect(() => {
+    if (isOpen && project) {
+      fetchMembers();
+    }
+  }, [isOpen, project, fetchMembers]);
+
+  const handleSearchUsers = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setSearching(true);
+    try {
+      const results = await teamService.searchUsers(query);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleAddMember = async () => {
-    if (!newMemberEmail.trim()) return;
+    if (!newMemberEmail.trim()) {
+      alert('Please enter email address');
+      return;
+    }
+
+    // Kiểm tra xem có selectedUser không
+    if (!selectedUser) {
+      alert('Please search and select a user first');
+      return;
+    }
 
     try {
       setAddingMember(true);
-      // TODO: Implement search user by email first
-      // For now, we'll need userId
-      alert('Need to implement user search by email first');
+      
+      // Chỉ gửi userId và role theo đúng AddMemberRequest interface
+      const requestData: AddMemberRequest = { 
+        userId: selectedUser.id, 
+        role: newMemberRole 
+      };
+      
+      await teamService.addMember(project.id, requestData);
+      
+      await fetchMembers();
+      
       setShowAddMember(false);
+      setSearchQuery('');
+      setSearchResults([]);
+      setSelectedUser(null);
       setNewMemberEmail('');
-    } catch (err) {
+      setNewMemberRole('MEMBER');
+      
+    } catch (err: unknown) {
       console.error('Failed to add member:', err);
+      let errorMessage = 'Failed to add member';
+      
+      if (err && typeof err === 'object') {
+        const axiosError = err as { response?: { data?: { error?: string } } };
+        if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
+        }
+      }
+      alert(errorMessage);
     } finally {
       setAddingMember(false);
     }
@@ -130,40 +185,138 @@ const ProjectTeamModal: React.FC<ProjectTeamModalProps> = ({
         {/* Add Member Form */}
         {showAddMember && (
           <div className="p-6 border-b border-gray-200 bg-blue-50">
-            <div className="flex items-center space-x-4">
-              <input
-                type="email"
-                placeholder="Enter member's email"
-                value={newMemberEmail}
-                onChange={(e) => setNewMemberEmail(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <select
-                value={newMemberRole}
-                onChange={(e) => setNewMemberRole(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="MEMBER">Member</option>
-                <option value="ADMIN">Admin</option>
-                <option value="VIEWER">Viewer</option>
-              </select>
-              <button
-                onClick={handleAddMember}
-                disabled={addingMember || !newMemberEmail.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {addingMember ? 'Adding...' : 'Add'}
-              </button>
-              <button
-                onClick={() => setShowAddMember(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search users by email..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchUsers(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {searching && (
+                  <div className="absolute right-3 top-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
-              Note: User must have an account with this email to be added.
-            </p>
+
+            {/* Search Results */}
+            {searchResults.length > 0 && (
+              <div className="mt-3 mb-4 space-y-2 max-h-48 overflow-y-auto">
+                <p className="text-sm text-gray-600 mb-2">Select a user:</p>
+                {searchResults.map(user => (
+                  <div
+                    key={user.id}
+                    className={`flex items-center justify-between p-3 bg-white border rounded-lg cursor-pointer transition-colors ${
+                      selectedUser?.id === user.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setNewMemberEmail(user.email);
+                      setSearchResults([]);
+                      setSearchQuery(user.email);
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                        {user.avatar ? (
+                          <img 
+                            src={user.avatar} 
+                            alt={user.name || ''}
+                            className="w-10 h-10 rounded-full"
+                          />
+                        ) : (
+                          <span className="text-gray-600 font-medium">
+                            {(user.name || user.email).charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{user.name || 'No name'}</p>
+                        <p className="text-sm text-gray-600">{user.email}</p>
+                      </div>
+                    </div>
+                    {selectedUser?.id === user.id && (
+                      <span className="text-blue-600 text-sm font-medium">✓ Selected</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Thông báo khi đã chọn user */}
+            {selectedUser && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 font-medium">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-green-800">Selected user:</p>
+                      <p className="text-sm text-green-700">{selectedUser.name || 'No name'} ({selectedUser.email})</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setNewMemberEmail('');
+                    }}
+                    className="text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Role selection */}
+            <div className="mt-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Role:
+                  </label>
+                  <select
+                    value={newMemberRole}
+                    onChange={(e) => setNewMemberRole(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="MEMBER">Member</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="VIEWER">Viewer</option>
+                  </select>
+                </div>
+                <div className="flex items-end space-x-4 mt-4">
+                  <button
+                    onClick={handleAddMember}
+                    disabled={addingMember || !selectedUser}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {addingMember ? 'Adding...' : 'Add Member'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddMember(false);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                      setSelectedUser(null);
+                      setNewMemberEmail('');
+                    }}
+                    className="px-6 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              {!selectedUser && (
+                <p className="mt-2 text-sm text-amber-600">
+                  Note: You must search and select a user before adding them as a member.
+                </p>
+              )}
+            </div>
           </div>
         )}
 
