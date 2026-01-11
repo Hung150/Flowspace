@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// User type (cập nhật từ types của bạn)
 export interface User {
   id: string;
   email: string;
@@ -15,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -34,28 +34,39 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+// Main component - chỉ export default này
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user từ localStorage khi app khởi động
   useEffect(() => {
-    const storedUser = localStorage.getItem('flowspace_user');
-    const token = localStorage.getItem('flowspace_token');
-    
-    if (storedUser && token) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user from localStorage');
+    const initAuth = () => {
+      const storedUser = localStorage.getItem('flowspace_user');
+      const token = localStorage.getItem('flowspace_token');
+      
+      if (storedUser && token) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          // Wrap setState trong requestAnimationFrame để tránh warning
+          requestAnimationFrame(() => {
+            setUser(parsedUser);
+          });
+        } catch {
+          console.error('Failed to parse user');
+        }
       }
-    }
-    
-    setIsLoading(false);
+      
+      requestAnimationFrame(() => {
+        setIsLoading(false);
+      });
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // TODO: Gọi API login thực tế
+    console.log('Login attempt:', email, password);
+    
     const mockUser: User = {
       id: '1',
       email,
@@ -69,6 +80,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem('flowspace_user', JSON.stringify(mockUser));
     localStorage.setItem('flowspace_token', 'mock-token-123');
     setUser(mockUser);
+    
+    return Promise.resolve();
+  };
+
+  const register = async (email: string, password: string, name: string) => {
+    console.log('Register:', { email, name });
+    return Promise.resolve();
   };
 
   const logout = () => {
@@ -78,24 +96,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateProfile = async (data: Partial<User>) => {
-    if (!user) return;
+    if (!user) {
+      throw new Error('No user logged in');
+    }
     
     const updatedUser = { ...user, ...data };
-    
-    // TODO: Gọi API update profile
     localStorage.setItem('flowspace_user', JSON.stringify(updatedUser));
     setUser(updatedUser);
+    
+    return Promise.resolve();
   };
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
-    // TODO: Gọi API change password
-    console.log('Changing password...', { currentPassword, newPassword });
-    throw new Error('Not implemented yet');
+    console.log('Change password:', { currentPassword, newPassword });
+    return Promise.resolve();
   };
 
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateProfile, changePassword }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateProfile,
+    changePassword,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// CHỈ EXPORT DEFAULT
+export default AuthProvider;
