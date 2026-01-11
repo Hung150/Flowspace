@@ -30,7 +30,7 @@ const ProfileTab = () => {
     try {
       await updateProfile(formData); // Gọi API update
       alert('Profile updated successfully!');
-    } catch (error) {
+    } catch {
       alert('Error updating profile');
     } finally {
       setIsLoading(false);
