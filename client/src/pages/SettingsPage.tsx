@@ -7,6 +7,34 @@ import {
   TeamTab 
 } from '../components/settings';
 
+// DangerZoneTab component (phải đặt trước khi sử dụng)
+const DangerZoneTab = () => (
+  <div className="p-4 space-y-6">
+    <h2 className="text-xl font-semibold text-red-700">Danger Zone</h2>
+    <div className="space-y-4">
+      <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+        <h3 className="font-medium text-red-800 mb-2">Delete Account</h3>
+        <p className="text-red-600 text-sm mb-3">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+          Delete Account
+        </button>
+      </div>
+      
+      <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+        <h3 className="font-medium text-yellow-800 mb-2">Export Data</h3>
+        <p className="text-yellow-700 text-sm mb-3">
+          Download all your data in JSON format.
+        </p>
+        <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm">
+          Export Data
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -18,33 +46,6 @@ const SettingsPage = () => {
     { id: 'team', label: '👥 Team', component: <TeamTab /> },
     { id: 'danger', label: '⚠️ Danger Zone', component: <DangerZoneTab /> },
   ];
-
-  const DangerZoneTab = () => (
-    <div className="p-4 space-y-6">
-      <h2 className="text-xl font-semibold text-red-700">Danger Zone</h2>
-      <div className="space-y-4">
-        <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-          <h3 className="font-medium text-red-800 mb-2">Delete Account</h3>
-          <p className="text-red-600 text-sm mb-3">
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </p>
-          <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
-            Delete Account
-          </button>
-        </div>
-        
-        <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
-          <h3 className="font-medium text-yellow-800 mb-2">Export Data</h3>
-          <p className="text-yellow-700 text-sm mb-3">
-            Download all your data in JSON format.
-          </p>
-          <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm">
-            Export Data
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
