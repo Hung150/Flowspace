@@ -1,6 +1,5 @@
-// File: client/src/components/settings/ProfileTab.tsx
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext'; // Giả sử bạn có AuthContext
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProfileTab = () => {
   const { user, updateProfile } = useAuth(); // Hook lấy user từ context
