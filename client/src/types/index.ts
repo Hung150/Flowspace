@@ -126,3 +126,21 @@ export interface AuthContextType {
   updateProfile: (data: Partial<User>) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
+
+// Auth Context Types
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+}
+
+// Optional: Extend User interface for settings
+declare module './index' {
+  interface User {
+    position?: string;
+    bio?: string;
+  }
+}
