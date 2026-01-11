@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HashRouter } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext' 
+import AuthProvider from './contexts/AuthContext' 
 import AppRoutes from './routes'
 
 const queryClient = new QueryClient()
