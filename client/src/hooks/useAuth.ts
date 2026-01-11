@@ -54,58 +54,72 @@ export const useAuth = () => {
     navigate('/login')
   }
 
-  // THÊM changePassword METHOD
+  // CHANGE PASSWORD - GỌI API THỰC
   const changePassword = async (currentPassword: string, newPassword: string) => {
     try {
-      // TODO: Gọi API change password thực tế
-      // const response = await authService.changePassword(currentPassword, newPassword);
-      
-      // Mock implementation
-      console.log('Change password:', { currentPassword, newPassword });
+      const response = await authService.changePassword(currentPassword, newPassword)
       
       return { 
-        success: true, 
-        message: 'Password changed successfully!' 
-      };
+        success: response.status === 'success', 
+        message: response.message || 'Password changed successfully!',
+        error: response.status === 'error' ? response.message : undefined
+      }
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
+      // TypeScript error handling
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } }
+        return {
+          success: false,
+          error: err.response?.data?.message || 'Failed to change password',
+        }
+      }
+      
+      // Generic error
+      const err = error as { message?: string }
       return {
         success: false,
-        error: err.response?.data?.message || 'Failed to change password',
-      };
+        error: err.message || 'Failed to change password',
+      }
     }
   }
 
-  // THÊM updateProfile METHOD
+  // UPDATE PROFILE - GỌI API THỰC
   const updateProfile = async (data: Partial<User>) => {
     try {
-      // TODO: Gọi API update profile thực tế
-      // const response = await authService.updateProfile(data);
+      const response = await authService.updateProfile(data)
       
-      // Mock implementation
-      console.log('Update profile:', data);
-      
-      // Update local user state
-      if (user) {
-        const updatedUser = { ...user, ...data };
-        setUser(updatedUser);
+      if (response.status === 'success' && response.data?.user) {
+        // Update local user state
+        setUser(response.data.user)
         
-        const token = localStorage.getItem('flowspace_token') || '';
+        // Update localStorage
+        const token = localStorage.getItem('token')
         if (token) {
-          authService.setAuthData(updatedUser, token);
+          authService.setAuthData(response.data.user, token)
         }
       }
       
       return { 
-        success: true, 
-        message: 'Profile updated successfully!' 
-      };
+        success: response.status === 'success', 
+        message: response.message || 'Profile updated successfully!',
+        error: response.status === 'error' ? response.message : undefined
+      }
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
+      // TypeScript error handling
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } }
+        return {
+          success: false,
+          error: err.response?.data?.message || 'Failed to update profile',
+        }
+      }
+      
+      // Generic error
+      const err = error as { message?: string }
       return {
         success: false,
-        error: err.response?.data?.message || 'Failed to update profile',
-      };
+        error: err.message || 'Failed to update profile',
+      }
     }
   }
 
@@ -117,8 +131,8 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    changePassword, // ← THÊM VÀO RETURN
-    updateProfile,  // ← THÊM VÀO RETURN
+    changePassword,
+    updateProfile,
     isAuthenticated,
   }
 }
