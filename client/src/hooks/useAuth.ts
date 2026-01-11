@@ -90,8 +90,7 @@ export const useAuth = () => {
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
         
-        // Update trong localStorage/service nếu cần
-        const token = authService.getToken();
+        const token = localStorage.getItem('flowspace_token') || '';
         if (token) {
           authService.setAuthData(updatedUser, token);
         }
