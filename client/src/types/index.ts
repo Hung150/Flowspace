@@ -67,7 +67,6 @@ export interface ListResponse<T> {
   total: number
 }
 
-// Thêm vào cuối file types của bạn
 
 // Team Member type
 export interface TeamMember {
@@ -116,4 +115,14 @@ export interface UpdateMemberRoleRequest {
 
 export interface RemoveMemberResponse {
   message: string;
+}
+
+// Auth types
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
