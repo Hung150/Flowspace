@@ -31,8 +31,9 @@ const AccountTab = () => {
       setMessage({type: 'success', text: 'Password changed successfully!'});
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to change password';
-      setMessage({type: 'error', text: error.message});
+      // SỬA Ở ĐÂY
+      const errorText = error instanceof Error ? error.message : 'Failed to change password';
+      setMessage({type: 'error', text: errorText});
     } finally {
       setIsLoading(false);
     }
