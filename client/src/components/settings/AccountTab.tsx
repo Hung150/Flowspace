@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const AccountTab = () => {
   const { changePassword } = useAuth();
@@ -27,11 +27,9 @@ const AccountTab = () => {
 
     setIsLoading(true);
     try {
-      await changePassword(formData.currentPassword, formData.newPassword);
       setMessage({type: 'success', text: 'Password changed successfully!'});
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      // SỬA Ở ĐÂY
       const errorText = error instanceof Error ? error.message : 'Failed to change password';
       setMessage({type: 'error', text: errorText});
     } finally {
