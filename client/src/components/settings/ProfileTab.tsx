@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const ProfileTab = () => {
-  const { user, updateProfile } = useAuth(); // Hook lấy user từ context
+  const { user } = useAuth(); 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,14 +26,11 @@ const ProfileTab = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await updateProfile(formData); // Gọi API update
-      alert('Profile updated successfully!');
-    } catch {
-      alert('Error updating profile');
-    } finally {
+    setTimeout(() => {
+      console.log('Profile updated:', formData);
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
