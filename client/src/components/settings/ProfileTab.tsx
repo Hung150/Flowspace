@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 
 const ProfileTab = () => {
-  const { user } = useAuth(); 
+  const { user, updateProfile } = useAuth(); 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -10,36 +10,51 @@ const ProfileTab = () => {
     bio: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
-  // Load user data khi component mount
+  // Load user data
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        position: user.position || '',
-        bio: user.bio || '',
-      });
-    }
+    const timer = setTimeout(() => {
+      if (user) {
+        setFormData({
+          name: user.name || '',
+          email: user.email || '',
+          position: user.position || '',
+          bio: user.bio || '',
+        });
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      console.log('Profile updated:', formData);
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      setIsLoading(false);
-    }, 1000);
+    
+    // DÙNG updateProfile thay vì setTimeout
+    const result = await updateProfile({
+      name: formData.name,
+      position: formData.position,
+      bio: formData.bio,
+    });
+    
+    if (result.success) {
+      setMessage({ type: 'success', text: result.message || 'Profile updated successfully!' });
+    } else {
+      setMessage({ type: 'error', text: result.error || 'Failed to update profile' });
+    }
+    
+    setIsLoading(false);
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Upload avatar logic
-      const formData = new FormData();
-      formData.append('avatar', file);
-      // Gọi API upload
+      // ĐỔI TÊN BIẾN để tránh conflict
+      const uploadData = new FormData();
+      uploadData.append('avatar', file);
+      console.log('Avatar to upload:', file.name);
+      // TODO: Gọi API upload
     }
   };
 
@@ -50,6 +65,13 @@ const ProfileTab = () => {
         <p className="text-gray-600">Update your personal details and avatar</p>
       </div>
 
+      {/* Hiển thị message nếu có */}
+      {message && (
+        <div className={`p-3 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          {message.text}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Avatar Section */}
         <div className="flex items-center gap-6">
@@ -57,9 +79,9 @@ const ProfileTab = () => {
             <img 
               src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=4f46e5&color=fff`}
               alt="Avatar"
-              className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+              className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
             />
-            <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700">
+            <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition">
               📤
               <input
                 id="avatar-upload"
@@ -86,7 +108,7 @@ const ProfileTab = () => {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -113,7 +135,7 @@ const ProfileTab = () => {
               type="text"
               value={formData.position}
               onChange={(e) => setFormData({...formData, position: e.target.value})}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., Project Manager"
             />
           </div>
@@ -126,7 +148,7 @@ const ProfileTab = () => {
               value={formData.bio}
               onChange={(e) => setFormData({...formData, bio: e.target.value})}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Tell us about yourself..."
               maxLength={200}
             />
@@ -134,7 +156,24 @@ const ProfileTab = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (user) {
+                setFormData({
+                  name: user.name || '',
+                  email: user.email || '',
+                  position: user.position || '',
+                  bio: user.bio || '',
+                });
+              }
+              setMessage(null);
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Reset
+          </button>
           <button
             type="submit"
             disabled={isLoading}
