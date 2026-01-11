@@ -3,7 +3,7 @@ import type { AuthResponse, User } from '../types'
 
 export const authService = {
   register: async (email: string, password: string, name?: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/api/auth/register', { // THÊM '/api/'
+    const response = await api.post<AuthResponse>('/api/auth/register', {
       email,
       password,
       name,
@@ -12,7 +12,7 @@ export const authService = {
   },
 
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/api/auth/login', { // THÊM '/api/'
+    const response = await api.post<AuthResponse>('/api/auth/login', {
       email,
       password,
     })
@@ -20,8 +20,37 @@ export const authService = {
   },
 
   getProfile: async (): Promise<User> => {
-    const response = await api.get<{ status: string; data: { user: User } }>('/api/auth/profile') // THÊM '/api/'
+    const response = await api.get<{ status: string; data: { user: User } }>('/api/auth/profile')
     return response.data.data.user
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ 
+    status: string; 
+    message: string;
+    data?: { message: string };
+  }> => {
+    const response = await api.post<{ 
+      status: string; 
+      message: string;
+      data?: { message: string };
+    }>('/api/auth/change-password', {
+      currentPassword,
+      newPassword,
+    })
+    return response.data
+  },
+
+  updateProfile: async (data: Partial<User>): Promise<{ 
+    status: string; 
+    data: { user: User };
+    message?: string;
+  }> => {
+    const response = await api.put<{ 
+      status: string; 
+      data: { user: User };
+      message?: string;
+    }>('/api/auth/profile', data)
+    return response.data
   },
 
   logout: () => {
@@ -47,5 +76,10 @@ export const authService = {
   setAuthData: (user: User, token: string) => {
     localStorage.setItem('user', JSON.stringify(user))
     localStorage.setItem('token', token)
+  },
+
+  // Helper method để lấy token
+  getToken: (): string | null => {
+    return localStorage.getItem('token')
   },
 }
