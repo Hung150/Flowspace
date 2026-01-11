@@ -32,7 +32,7 @@ const AccountTab = () => {
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to change password';
-      setMessage({type: 'error', text: error.message || 'Failed to change password'});
+      setMessage({type: 'error', text: error.message});
     } finally {
       setIsLoading(false);
     }
