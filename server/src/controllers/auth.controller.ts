@@ -200,4 +200,129 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-// THÊM: Change
+// THÊM: Change Password Function
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const { currentPassword, newPassword }: ChangePasswordBody = req.body;
+    const authReq = req as any;
+    const userId = authReq.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Not authenticated'
+      });
+    }
+
+    // Validation
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Current password and new password are required'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'New password must be at least 6 characters'
+      });
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+
+    // Check current password
+    const isValidPassword = await comparePassword(currentPassword, user.password);
+
+    if (!isValidPassword) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        updatedAt: new Date()
+      }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password changed successfully',
+      data: { message: 'Password updated successfully' }
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to change password'
+    });
+  }
+};
+
+// THÊM: Update Profile Function
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const { name, position, bio, avatar }: UpdateProfileBody = req.body;
+    const authReq = req as any;
+    const userId = authReq.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Not authenticated'
+      });
+    }
+
+    // Find and update user
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(position !== undefined && { position }),
+        ...(bio !== undefined && { bio }),
+        ...(avatar !== undefined && { avatar }),
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        position: true,
+        bio: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      data: { user: updatedUser }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update profile'
+    });
+  }
+};
