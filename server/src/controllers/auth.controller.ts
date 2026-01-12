@@ -16,6 +16,18 @@ interface LoginBody {
   password: string;
 }
 
+interface ChangePasswordBody {
+  currentPassword: string;
+  newPassword: string;
+}
+
+interface UpdateProfileBody {
+  name?: string;
+  position?: string;
+  bio?: string;
+  avatar?: string;
+}
+
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name }: RegisterBody = req.body;
@@ -161,6 +173,8 @@ export const getProfile = async (req: Request, res: Response) => {
         email: true,
         name: true,
         avatar: true,
+        position: true,
+        bio: true,
         createdAt: true,
         updatedAt: true
       }
@@ -185,3 +199,5 @@ export const getProfile = async (req: Request, res: Response) => {
     });
   }
 };
+
+// THÊM: Change
