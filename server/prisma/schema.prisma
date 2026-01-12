@@ -13,6 +13,8 @@ model User {
   password String
   name     String?
   avatar   String?
+  position String?
+  bio      String?
 
   // Quan hệ với Project (User là owner)
   ownedProjects Project[] @relation("OwnedProjects")
