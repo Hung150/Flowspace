@@ -55,7 +55,7 @@ export const register = async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
+    // Create user - CHỈ TẠO NHỮNG FIELD CÓ TRONG DATABASE
     const user = await prisma.user.create({
       data: {
         email,
@@ -105,9 +105,19 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Find user
+    // Find user - QUAN TRỌNG: KHÔNG select position vì database chưa có
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        password: true,
+        createdAt: true,
+        updatedAt: true
+        // KHÔNG select: position, bio (có thể chưa có trong database)
+      }
     });
 
     if (!user) {
@@ -173,8 +183,7 @@ export const getProfile = async (req: Request, res: Response) => {
         email: true,
         name: true,
         avatar: true,
-        position: true,
-        bio: true,
+        // TẠM THỜI COMMENT: position: true, bio: true,
         createdAt: true,
         updatedAt: true
       }
@@ -277,7 +286,7 @@ export const changePassword = async (req: Request, res: Response) => {
   }
 };
 
-// THÊM: Update Profile Function
+// THÊM: Update Profile Function - TẠM THỜI BỎ POSITION
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const { name, position, bio, avatar }: UpdateProfileBody = req.body;
@@ -291,13 +300,13 @@ export const updateProfile = async (req: Request, res: Response) => {
       });
     }
 
-    // Find and update user
+    // Find and update user - TẠM THỜI KHÔNG UPDATE POSITION
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         ...(name !== undefined && { name }),
-        ...(position !== undefined && { position }),
-        ...(bio !== undefined && { bio }),
+        // TẠM THỜI COMMENT: ...(position !== undefined && { position }),
+        // TẠM THỜI COMMENT: ...(bio !== undefined && { bio }),
         ...(avatar !== undefined && { avatar }),
         updatedAt: new Date()
       },
@@ -306,8 +315,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         email: true,
         name: true,
         avatar: true,
-        position: true,
-        bio: true,
+        // TẠM THỜI COMMENT: position: true, bio: true,
         createdAt: true,
         updatedAt: true
       }
